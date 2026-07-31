@@ -6,15 +6,17 @@ import DataTable from '@/components/table/DataTable';
 import FilterBar from '@/components/ui/FilterBar';
 import Drawer from '@/components/ui/Drawer';
 import StatusBadge from '@/components/ui/StatusBadge';
+import ImportModal from '@/components/ui/ImportModal';
 import { generateRecords, Record as SystemRecord } from '@/lib/mockData';
 import { useDebounce } from '@/lib/useDebounce';
 import { ColumnDef, SortingState } from '@tanstack/react-table';
-import { Download, SlidersHorizontal, Eye } from 'lucide-react';
+import { Download, Upload, Plus } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 export default function DataManagementPage() {
-  // Generate 5,000 records for Challenge 1 demo
-  const allRecords = useMemo(() => generateRecords(5000), []);
+  // Master dataset state with 5,000 initial records + ability to import
+  const [allRecords, setAllRecords] = useState<SystemRecord[]>(() => generateRecords(5000));
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -28,7 +30,7 @@ export default function DataManagementPage() {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'id', desc: false }]);
   const [selectedRecord, setSelectedRecord] = useState<SystemRecord | null>(null);
 
-  // Challenge 1: Performantly filter 5,000 items in memory
+  // Challenge 1: Performantly filter records in memory
   const filteredRecords = useMemo(() => {
     return allRecords.filter(item => {
       if (debouncedSearch) {
@@ -115,30 +117,54 @@ export default function DataManagementPage() {
     });
   };
 
+  const handleImportRecords = (newRecords: SystemRecord[]) => {
+    setAllRecords(prev => [...newRecords, ...prev]);
+  };
+
   return (
     <PageShell
       title="Data Management"
-      description="Performantly query, filter, and inspect 5,000+ virtualized system records."
+      description="Performantly query, filter, import, and inspect 5,000+ virtualized system records."
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Data Management' }]}
       actions={
-        <button
-          onClick={handleExport}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '6px 12px',
-            background: 'var(--accent)',
-            color: 'var(--accent-fg)',
-            border: 'none',
-            borderRadius: 'var(--radius)',
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
-        >
-          <Download size={14} /> Export CSV ({filteredRecords.length.toLocaleString()})
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setIsImportOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              fontSize: 13,
+              color: 'var(--text)',
+              cursor: 'pointer',
+            }}
+          >
+            <Upload size={14} /> Import Data
+          </button>
+
+          <button
+            onClick={handleExport}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              background: 'var(--accent)',
+              color: 'var(--accent-fg)',
+              border: 'none',
+              borderRadius: 'var(--radius)',
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            <Download size={14} /> Export CSV ({filteredRecords.length.toLocaleString()})
+          </button>
+        </div>
       }
     >
       <div>
@@ -152,7 +178,7 @@ export default function DataManagementPage() {
           onResetFilters={() => setSelectedFilters({ status: '', priority: '', category: '' })}
         />
 
-        {/* Challenge 1: Virtualized Table for smooth rendering of 5,000 records */}
+        {/* Challenge 1: Virtualized Table for smooth rendering of 5,000+ records */}
         <DataTable
           data={filteredRecords}
           columns={columns}
@@ -160,6 +186,13 @@ export default function DataManagementPage() {
           onSortingChange={setSorting}
           virtualize={true}
           onRowClick={record => setSelectedRecord(record)}
+        />
+
+        {/* Import Modal */}
+        <ImportModal
+          open={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          onImport={handleImportRecords}
         />
 
         {/* Detail View Drawer */}
