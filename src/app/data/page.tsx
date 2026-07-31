@@ -7,7 +7,8 @@ import FilterBar from '@/components/ui/FilterBar';
 import Drawer from '@/components/ui/Drawer';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ImportModal from '@/components/ui/ImportModal';
-import { generateRecords, Record as SystemRecord } from '@/lib/mockData';
+import { useDataContext } from '@/context/DataContext';
+import { Record as SystemRecord } from '@/lib/mockData';
 import { exportToCSV, FieldSchema } from '@/lib/exportUtils';
 import { useDebounce } from '@/lib/useDebounce';
 import { ColumnDef, SortingState } from '@tanstack/react-table';
@@ -15,8 +16,8 @@ import { Download, Upload, Plus } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 export default function DataManagementPage() {
-  // Master dataset state with 5,000 initial records + ability to import
-  const [allRecords, setAllRecords] = useState<SystemRecord[]>(() => generateRecords(5000));
+  // Access central reactive dataset and import function from DataContext
+  const { records: allRecords, importRecords } = useDataContext();
   const [isImportOpen, setIsImportOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,7 +143,7 @@ export default function DataManagementPage() {
   };
 
   const handleImportRecords = (newRecords: SystemRecord[]) => {
-    setAllRecords(prev => [...newRecords, ...prev]);
+    importRecords(newRecords);
   };
 
   return (

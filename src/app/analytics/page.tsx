@@ -5,8 +5,8 @@ import PageShell from '@/components/layout/PageShell';
 import ChartCard from '@/components/charts/ChartCard';
 import FilterBar from '@/components/ui/FilterBar';
 import SummaryCard from '@/components/ui/SummaryCard';
+import { useDataContext } from '@/context/DataContext';
 import {
-  generateRecords,
   aggregateByMonth,
   aggregateByStatus,
   aggregateByCategory,
@@ -15,7 +15,7 @@ import {
 import { BarChart2, PieChart as PieIcon, TrendingUp, Filter } from 'lucide-react';
 
 export default function AnalyticsPage() {
-  const allRecords = useMemo(() => generateRecords(5000), []);
+  const { records: allRecords } = useDataContext();
 
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');

@@ -7,7 +7,8 @@ import FilterBar from '@/components/ui/FilterBar';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
 import ImportModal from '@/components/ui/ImportModal';
-import { generateEntries, Entry } from '@/lib/mockData';
+import { useDataContext } from '@/context/DataContext';
+import { Entry } from '@/lib/mockData';
 import { exportToCSV, FieldSchema } from '@/lib/exportUtils';
 import { useDebounce } from '@/lib/useDebounce';
 import { ColumnDef } from '@tanstack/react-table';
@@ -15,7 +16,7 @@ import { Download, Upload, Plus } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 export default function ReportsPage() {
-  const [allEntries, setAllEntries] = useState<Entry[]>(() => generateEntries(1500));
+  const { entries: allEntries, importEntries } = useDataContext();
 
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -116,7 +117,7 @@ export default function ReportsPage() {
   };
 
   const handleImportEntries = (newEntries: Entry[]) => {
-    setAllEntries(prev => [...newEntries, ...prev]);
+    importEntries(newEntries);
   };
 
   const handleGenerateCustom = (e: React.FormEvent) => {
