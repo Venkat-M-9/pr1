@@ -6,14 +6,16 @@ import DataTable from '@/components/table/DataTable';
 import FilterBar from '@/components/ui/FilterBar';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
+import ImportModal from '@/components/ui/ImportModal';
 import { generateEntries, Entry } from '@/lib/mockData';
+import { exportToCSV, FieldSchema } from '@/lib/exportUtils';
 import { useDebounce } from '@/lib/useDebounce';
 import { ColumnDef } from '@tanstack/react-table';
-import { FileText, Download, Plus, Check } from 'lucide-react';
+import { Download, Upload, Plus } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 export default function ReportsPage() {
-  const allEntries = useMemo(() => generateEntries(1500), []);
+  const [allEntries, setAllEntries] = useState<Entry[]>(() => generateEntries(1500));
 
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 250);
@@ -21,6 +23,7 @@ export default function ReportsPage() {
   const [selectedType, setSelectedType] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [reportTitle, setReportTitle] = useState('');
 
   const filteredEntries = useMemo(() => {
@@ -58,6 +61,18 @@ export default function ReportsPage() {
     []
   );
 
+  const entryImportSchema: FieldSchema<Entry>[] = [
+    { key: 'id', label: 'Entry ID', defaultValue: `ENT-${Math.floor(Math.random() * 90000 + 10000)}` },
+    { key: 'reference', label: 'Reference', defaultValue: `REF-${Math.floor(Math.random() * 900000 + 100000)}` },
+    { key: 'title', label: 'Title', defaultValue: 'New Financial Entry' },
+    { key: 'type', label: 'Type', defaultValue: 'invoice' },
+    { key: 'status', label: 'Status', defaultValue: 'active' },
+    { key: 'currency', label: 'Currency', defaultValue: 'USD' },
+    { key: 'amount', label: 'Amount', type: 'number', defaultValue: 500 },
+    { key: 'date', label: 'Date', defaultValue: new Date().toISOString().split('T')[0] },
+    { key: 'notes', label: 'Notes', defaultValue: 'Imported via report manager.' },
+  ];
+
   const filterGroups = [
     {
       id: 'type',
@@ -83,11 +98,25 @@ export default function ReportsPage() {
   ];
 
   const handleExportCSV = () => {
+    exportToCSV(filteredEntries, `financial_report_${Date.now()}.csv`, [
+      { key: 'id', label: 'Entry ID' },
+      { key: 'reference', label: 'Reference' },
+      { key: 'title', label: 'Title' },
+      { key: 'type', label: 'Type' },
+      { key: 'status', label: 'Status' },
+      { key: 'date', label: 'Date' },
+      { key: 'amount', label: 'Amount' },
+      { key: 'currency', label: 'Currency' },
+    ]);
     toast({
-      title: 'CSV Export Initiated',
-      description: `Downloading report containing ${filteredEntries.length} records.`,
+      title: 'CSV Export Complete',
+      description: `Downloaded report containing ${filteredEntries.length} entries.`,
       type: 'success',
     });
+  };
+
+  const handleImportEntries = (newEntries: Entry[]) => {
+    setAllEntries(prev => [...newEntries, ...prev]);
   };
 
   const handleGenerateCustom = (e: React.FormEvent) => {
@@ -107,7 +136,25 @@ export default function ReportsPage() {
       description="Filterable statement reports with instant export and report builder."
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Reports' }]}
       actions={
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => setIsImportOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              fontSize: 13,
+              color: 'var(--text)',
+              cursor: 'pointer',
+            }}
+          >
+            <Upload size={14} /> Import Entries
+          </button>
+
           <button
             onClick={() => setIsModalOpen(true)}
             style={{
@@ -142,7 +189,7 @@ export default function ReportsPage() {
               cursor: 'pointer',
             }}
           >
-            <Download size={14} /> Export CSV
+            <Download size={14} /> Export CSV ({filteredEntries.length.toLocaleString()})
           </button>
         </div>
       }
@@ -166,6 +213,16 @@ export default function ReportsPage() {
 
         {/* Challenge 2: Identical Paginated DataTable pattern */}
         <DataTable data={filteredEntries} columns={columns} pageSize={15} />
+
+        {/* Generic Import Modal Reused for Entries */}
+        <ImportModal<Entry>
+          open={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          onImport={handleImportEntries}
+          schema={entryImportSchema}
+          entityName="Financial Entry"
+          sampleData={allEntries.slice(0, 3)}
+        />
 
         {/* Modal for Report Builder */}
         <Modal

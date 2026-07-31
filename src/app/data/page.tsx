@@ -8,6 +8,7 @@ import Drawer from '@/components/ui/Drawer';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ImportModal from '@/components/ui/ImportModal';
 import { generateRecords, Record as SystemRecord } from '@/lib/mockData';
+import { exportToCSV, FieldSchema } from '@/lib/exportUtils';
 import { useDebounce } from '@/lib/useDebounce';
 import { ColumnDef, SortingState } from '@tanstack/react-table';
 import { Download, Upload, Plus } from 'lucide-react';
@@ -109,10 +110,33 @@ export default function DataManagementPage() {
     },
   ];
 
+  const recordImportSchema: FieldSchema<SystemRecord>[] = [
+    { key: 'id', label: 'Record ID', defaultValue: `REC-${Math.floor(Math.random() * 90000 + 10000)}` },
+    { key: 'name', label: 'Title / Name', defaultValue: 'New Imported Record' },
+    { key: 'status', label: 'Status', defaultValue: 'active' },
+    { key: 'priority', label: 'Priority', defaultValue: 'medium' },
+    { key: 'category', label: 'Category', defaultValue: 'alpha' },
+    { key: 'owner', label: 'Owner', defaultValue: 'System Admin' },
+    { key: 'value', label: 'Value ($)', type: 'number', defaultValue: 1000 },
+    { key: 'createdAt', label: 'Created Date', defaultValue: new Date().toISOString().split('T')[0] },
+    { key: 'updatedAt', label: 'Updated Date', defaultValue: new Date().toISOString().split('T')[0] },
+    { key: 'description', label: 'Description', defaultValue: 'Imported via data manager.' },
+  ];
+
   const handleExport = () => {
+    exportToCSV(filteredRecords, `records_export_${Date.now()}.csv`, [
+      { key: 'id', label: 'Record ID' },
+      { key: 'name', label: 'Title / Name' },
+      { key: 'status', label: 'Status' },
+      { key: 'priority', label: 'Priority' },
+      { key: 'category', label: 'Category' },
+      { key: 'owner', label: 'Owner' },
+      { key: 'value', label: 'Value ($)' },
+      { key: 'createdAt', label: 'Created Date' },
+    ]);
     toast({
-      title: 'Export Started',
-      description: `Exporting ${filteredRecords.length.toLocaleString()} records to CSV format.`,
+      title: 'Export Complete',
+      description: `Downloaded ${filteredRecords.length.toLocaleString()} records to CSV file.`,
       type: 'success',
     });
   };
@@ -188,11 +212,14 @@ export default function DataManagementPage() {
           onRowClick={record => setSelectedRecord(record)}
         />
 
-        {/* Import Modal */}
-        <ImportModal
+        {/* Generic Reusable Import Modal */}
+        <ImportModal<SystemRecord>
           open={isImportOpen}
           onClose={() => setIsImportOpen(false)}
           onImport={handleImportRecords}
+          schema={recordImportSchema}
+          entityName="Record"
+          sampleData={allRecords.slice(0, 3)}
         />
 
         {/* Detail View Drawer */}
