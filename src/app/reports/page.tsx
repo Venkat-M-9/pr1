@@ -2,44 +2,20 @@
 
 import { useMemo, useState } from 'react';
 import PageShell from '@/components/layout/PageShell';
-import DataTable from '@/components/table/DataTable';
-import FilterBar from '@/components/ui/FilterBar';
+import DataGrid from '@/components/table/DataGrid';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
-import ImportModal from '@/components/ui/ImportModal';
 import { useDataContext } from '@/context/DataContext';
 import { Entry } from '@/lib/mockData';
-import { exportToCSV, FieldSchema } from '@/lib/exportUtils';
-import { useDebounce } from '@/lib/useDebounce';
+import { FieldSchema } from '@/lib/exportUtils';
 import { ColumnDef } from '@tanstack/react-table';
-import { Download, Upload, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from '@/lib/toast';
 
 export default function ReportsPage() {
-  const { entries: allEntries, importEntries } = useDataContext();
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearch = useDebounce(searchQuery, 250);
-
-  const [selectedType, setSelectedType] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const { entries, importEntries } = useDataContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
   const [reportTitle, setReportTitle] = useState('');
-
-  const filteredEntries = useMemo(() => {
-    return allEntries.filter(entry => {
-      if (debouncedSearch) {
-        const q = debouncedSearch.toLowerCase();
-        const matchTitle = entry.title.toLowerCase().includes(q);
-        const matchRef = entry.reference.toLowerCase().includes(q);
-        if (!matchTitle && !matchRef) return false;
-      }
-      if (selectedType && entry.type !== selectedType) return false;
-      if (selectedStatus && entry.status !== selectedStatus) return false;
-      return true;
-    });
-  }, [allEntries, debouncedSearch, selectedType, selectedStatus]);
 
   const columns = useMemo<ColumnDef<Entry, any>[]>(
     () => [
@@ -98,28 +74,6 @@ export default function ReportsPage() {
     },
   ];
 
-  const handleExportCSV = () => {
-    exportToCSV(filteredEntries, `financial_report_${Date.now()}.csv`, [
-      { key: 'id', label: 'Entry ID' },
-      { key: 'reference', label: 'Reference' },
-      { key: 'title', label: 'Title' },
-      { key: 'type', label: 'Type' },
-      { key: 'status', label: 'Status' },
-      { key: 'date', label: 'Date' },
-      { key: 'amount', label: 'Amount' },
-      { key: 'currency', label: 'Currency' },
-    ]);
-    toast({
-      title: 'CSV Export Complete',
-      description: `Downloaded report containing ${filteredEntries.length} entries.`,
-      type: 'success',
-    });
-  };
-
-  const handleImportEntries = (newEntries: Entry[]) => {
-    importEntries(newEntries);
-  };
-
   const handleGenerateCustom = (e: React.FormEvent) => {
     e.preventDefault();
     setIsModalOpen(false);
@@ -136,93 +90,84 @@ export default function ReportsPage() {
       title="Financial & Audit Reports"
       description="Filterable statement reports with instant export and report builder."
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Reports' }]}
-      actions={
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={() => setIsImportOpen(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              fontSize: 13,
-              color: 'var(--text)',
-              cursor: 'pointer',
-            }}
-          >
-            <Upload size={14} /> Import Entries
-          </button>
-
-          <button
-            onClick={() => setIsModalOpen(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              fontSize: 13,
-              color: 'var(--text)',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={14} /> New Report
-          </button>
-
-          <button
-            onClick={handleExportCSV}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              background: 'var(--accent)',
-              color: 'var(--accent-fg)',
-              border: 'none',
-              borderRadius: 'var(--radius)',
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
-            <Download size={14} /> Export CSV ({filteredEntries.length.toLocaleString()})
-          </button>
-        </div>
-      }
     >
       <div>
-        <FilterBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+        <DataGrid<Entry>
+          data={entries}
+          columns={columns}
+          searchableKeys={['title', 'reference', 'id', 'notes']}
           searchPlaceholder="Search reference or title..."
-          filters={filterGroups}
-          selectedFilters={{ type: selectedType, status: selectedStatus }}
-          onFilterChange={(id, val) => {
-            if (id === 'type') setSelectedType(val);
-            if (id === 'status') setSelectedStatus(val);
-          }}
-          onResetFilters={() => {
-            setSelectedType('');
-            setSelectedStatus('');
-          }}
-        />
-
-        {/* Challenge 2: Identical Paginated DataTable pattern */}
-        <DataTable data={filteredEntries} columns={columns} pageSize={15} />
-
-        {/* Generic Import Modal Reused for Entries */}
-        <ImportModal<Entry>
-          open={isImportOpen}
-          onClose={() => setIsImportOpen(false)}
-          onImport={handleImportEntries}
-          schema={entryImportSchema}
+          filterGroups={filterGroups}
+          pageSize={15}
           entityName="Financial Entry"
-          sampleData={allEntries.slice(0, 3)}
+          exportable={true}
+          importable={true}
+          importSchema={entryImportSchema}
+          onImport={importEntries}
+          getDetailTitle={entry => `${entry.reference} — ${entry.title}`}
+          actions={
+            <button
+              onClick={() => setIsModalOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius)',
+                fontSize: 13,
+                color: 'var(--text)',
+                cursor: 'pointer',
+              }}
+            >
+              <Plus size={14} /> New Report
+            </button>
+          }
+          renderDetail={selectedEntry => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Title & Reference</span>
+                <h3 style={{ fontSize: 16, fontWeight: 600, marginTop: 2 }}>{selectedEntry.title}</h3>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{selectedEntry.reference}</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Status</span>
+                  <div style={{ marginTop: 4 }}>
+                    <StatusBadge value={selectedEntry.status} variant="status" />
+                  </div>
+                </div>
+                <div>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Type</span>
+                  <p style={{ fontSize: 13, fontWeight: 500, textTransform: 'capitalize', marginTop: 4 }}>
+                    {selectedEntry.type}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Date</span>
+                  <p style={{ fontSize: 13, marginTop: 2 }}>{selectedEntry.date}</p>
+                </div>
+                <div>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Amount</span>
+                  <p style={{ fontSize: 18, fontWeight: 600, marginTop: 2 }}>
+                    {selectedEntry.currency} ${selectedEntry.amount.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Notes</span>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginTop: 4 }}>
+                  {selectedEntry.notes}
+                </p>
+              </div>
+            </div>
+          )}
         />
 
         {/* Modal for Report Builder */}

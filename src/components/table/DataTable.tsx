@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -28,20 +28,25 @@ interface Props<TData> {
 export default function DataTable<TData>({
   data,
   columns,
-  sorting,
-  onSortingChange,
+  sorting: externalSorting,
+  onSortingChange: externalOnSortingChange,
   virtualize = false,
   onRowClick,
   pageSize = 20,
 }: Props<TData>) {
+  const [internalSorting, setInternalSorting] = useState<SortingState>([]);
+
+  const sorting = externalSorting !== undefined ? externalSorting : internalSorting;
+  const onSortingChange = externalOnSortingChange || setInternalSorting;
+
   const table = useReactTable({
     data,
     columns,
     state: { sorting },
-    onSortingChange: onSortingChange ? (updater => {
+    onSortingChange: updater => {
       const next = typeof updater === 'function' ? updater(sorting || []) : updater;
       onSortingChange(next);
-    }) : undefined,
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: !virtualize ? getPaginationRowModel() : undefined,
