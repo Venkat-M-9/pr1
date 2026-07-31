@@ -83,17 +83,60 @@
   padding: 12px 16px;
   border-top: 1px solid var(--border);
   background: var(--bg-subtle);
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.pageInfo {
+.pageJumpGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pageLabel {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.pageInput {
+  width: 52px;
+  padding: 4px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.pageInput:focus {
+  background: var(--bg);
+  border-color: var(--text);
+  outline: none;
+}
+
+/* Hide spin buttons for text input look */
+.pageInput::-webkit-inner-spin-button,
+.pageInput::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pageInput {
+  -moz-appearance: textfield;
+}
+
+.pageTotal {
   color: var(--text-muted);
 }
 
 .pageActions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pageBtn {

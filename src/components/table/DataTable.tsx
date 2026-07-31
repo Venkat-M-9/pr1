@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,7 +11,15 @@ import {
   SortingState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import styles from './DataTable.module.css';
 
@@ -57,6 +65,23 @@ export default function DataTable<TData>({
 
   const parentRef = useRef<HTMLDivElement>(null);
   const rows = table.getRowModel().rows;
+
+  const [pageInput, setPageInput] = useState(String(table.getState().pagination.pageIndex + 1));
+
+  useEffect(() => {
+    setPageInput(String(table.getState().pagination.pageIndex + 1));
+  }, [table.getState().pagination.pageIndex]);
+
+  const handleJumpToPage = () => {
+    const pageNum = parseInt(pageInput, 10);
+    if (!isNaN(pageNum)) {
+      const targetPage = Math.max(1, Math.min(pageNum, table.getPageCount()));
+      table.setPageIndex(targetPage - 1);
+      setPageInput(String(targetPage));
+    } else {
+      setPageInput(String(table.getState().pagination.pageIndex + 1));
+    }
+  };
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -165,16 +190,42 @@ export default function DataTable<TData>({
 
       {!virtualize && (
         <div className={styles.pagination}>
-          <span className={styles.pageInfo}>
-            Page <strong>{table.getState().pagination.pageIndex + 1}</strong> of{' '}
-            <strong>{table.getPageCount()}</strong> ({data.length} total)
-          </span>
+          <div className={styles.pageJumpGroup}>
+            <span className={styles.pageLabel}>Go to page:</span>
+            <input
+              type="number"
+              min={1}
+              max={table.getPageCount()}
+              value={pageInput}
+              onChange={e => setPageInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleJumpToPage();
+              }}
+              onBlur={handleJumpToPage}
+              className={styles.pageInput}
+              aria-label="Jump to page number"
+            />
+            <span className={styles.pageTotal}>
+              of <strong>{table.getPageCount()}</strong> ({data.length} total)
+            </span>
+          </div>
 
           <div className={styles.pageActions}>
             <button
               className={styles.pageBtn}
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              title="First Page"
+              aria-label="First Page"
+            >
+              <ChevronsLeft size={14} />
+            </button>
+            <button
+              className={styles.pageBtn}
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
+              title="Previous Page"
+              aria-label="Previous Page"
             >
               <ChevronLeft size={14} /> Previous
             </button>
@@ -182,8 +233,19 @@ export default function DataTable<TData>({
               className={styles.pageBtn}
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
+              title="Next Page"
+              aria-label="Next Page"
             >
               Next <ChevronRight size={14} />
+            </button>
+            <button
+              className={styles.pageBtn}
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              title="Last Page"
+              aria-label="Last Page"
+            >
+              <ChevronsRight size={14} />
             </button>
           </div>
         </div>
