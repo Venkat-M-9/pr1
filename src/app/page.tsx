@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import PageShell from '@/components/layout/PageShell';
 import SummaryCard from '@/components/ui/SummaryCard';
 import ChartCard from '@/components/charts/ChartCard';
-import DataGrid from '@/components/table/DataGrid';
+import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useDataContext } from '@/context/DataContext';
 import { aggregateByMonth, aggregateByStatus, Record as SystemRecord } from '@/lib/mockData';
@@ -130,7 +130,7 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Recent Records Section using composite DataGrid component */}
+        {/* Activity Stream using ResourceTable component */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <div>
@@ -141,14 +141,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          <DataGrid<SystemRecord>
+          <ResourceTable<SystemRecord>
             data={records}
             columns={columns}
-            searchableKeys={['name', 'id', 'owner']}
+            searchFields={['name', 'id', 'owner']}
             searchPlaceholder="Search activity stream..."
             filterGroups={filterGroups}
             pageSize={10}
-            entityName="Record"
+            resourceName="Record"
             exportable={false}
             getDetailTitle={item => item.id}
             renderDetail={selectedRecord => (

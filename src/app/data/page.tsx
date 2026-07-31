@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import PageShell from '@/components/layout/PageShell';
-import DataGrid from '@/components/table/DataGrid';
+import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useDataContext } from '@/context/DataContext';
 import { Record as SystemRecord } from '@/lib/mockData';
@@ -91,14 +91,14 @@ export default function DataManagementPage() {
       description="Performantly query, filter, import, and inspect 5,000+ virtualized system records."
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Data Management' }]}
     >
-      <DataGrid<SystemRecord>
+      <ResourceTable<SystemRecord>
         data={records}
         columns={columns}
-        searchableKeys={['name', 'id', 'owner', 'description']}
+        searchFields={['name', 'id', 'owner', 'description']}
         searchPlaceholder="Search by ID, Title, Owner..."
         filterGroups={filterGroups}
         virtualize={true}
-        entityName="Record"
+        resourceName="Record"
         exportable={true}
         importable={true}
         importSchema={recordImportSchema}

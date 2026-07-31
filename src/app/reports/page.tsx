@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import PageShell from '@/components/layout/PageShell';
-import DataGrid from '@/components/table/DataGrid';
+import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
 import Modal from '@/components/ui/Modal';
 import { useDataContext } from '@/context/DataContext';
@@ -92,14 +92,14 @@ export default function ReportsPage() {
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Reports' }]}
     >
       <div>
-        <DataGrid<Entry>
+        <ResourceTable<Entry>
           data={entries}
           columns={columns}
-          searchableKeys={['title', 'reference', 'id', 'notes']}
+          searchFields={['title', 'reference', 'id', 'notes']}
           searchPlaceholder="Search reference or title..."
           filterGroups={filterGroups}
           pageSize={15}
-          entityName="Financial Entry"
+          resourceName="Financial Entry"
           exportable={true}
           importable={true}
           importSchema={entryImportSchema}
