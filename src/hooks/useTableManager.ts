@@ -22,6 +22,13 @@ export interface UseTableManagerOptions<T> {
   debounceMs?: number;
 }
 
+/**
+ * useTableManager — Centralized state management hook for tables (Challenge 3 Reusability).
+ * Handles search debouncing, multi-column filtering, sorting, item selection, and pagination stats.
+ *
+ * @template T
+ * @param {UseTableManagerOptions<T>} options Config options for table manager.
+ */
 export function useTableManager<T extends Record<string, any>>({
   data,
   searchFields = [],

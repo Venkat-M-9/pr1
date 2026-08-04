@@ -11,6 +11,17 @@ interface ToastOptions {
 const listeners: ((opts: ToastOptions & { id: string }) => void)[] = [];
 
 export function toast(opts: ToastOptions) {
+  if (typeof window !== 'undefined') {
+    try {
+      const pref = localStorage.getItem('pref_notifications');
+      if (pref !== null && JSON.parse(pref) === false) {
+        return; // Respect user preference for disabling toasts (Challenge 9)
+      }
+    } catch {
+      // Fallback if parsing fails
+    }
+  }
+
   const id = Math.random().toString(36).slice(2);
   listeners.forEach(fn => fn({ ...opts, id }));
 }

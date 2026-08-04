@@ -6,6 +6,7 @@ import SummaryCard from '@/components/ui/SummaryCard';
 import ChartCard from '@/components/charts/ChartCard';
 import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
+import CollapsibleSection from '@/components/ui/CollapsibleSection';
 import { useDataContext } from '@/context/DataContext';
 import { aggregateByMonth, aggregateByStatus, Record as SystemRecord } from '@/lib/mockData';
 import { ColumnDef } from '@tanstack/react-table';
@@ -110,25 +111,31 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Charts Row */}
-        <div className={styles.grid2}>
-          <ChartCard
-            title="Record Creation Velocity"
-            subtitle="Monthly generation trend across system dataset"
-            data={monthlyData}
-            dataKey="count"
-            categoryKey="month"
-            type="area"
-          />
-          <ChartCard
-            title="Status Distribution"
-            subtitle="Current record breakdown by operational state"
-            data={statusData}
-            dataKey="count"
-            categoryKey="status"
-            type="pie"
-          />
-        </div>
+        {/* Charts Row inside CollapsibleSection for Challenge 5 Information Density */}
+        <CollapsibleSection
+          title="Analytical Visualizations"
+          subtitle="Monthly creation trend & operational status breakdown"
+          defaultOpen={true}
+        >
+          <div className={styles.grid2}>
+            <ChartCard
+              title="Record Creation Velocity"
+              subtitle="Monthly generation trend across system dataset"
+              data={monthlyData}
+              dataKey="count"
+              categoryKey="month"
+              type="area"
+            />
+            <ChartCard
+              title="Status Distribution"
+              subtitle="Current record breakdown by operational state"
+              data={statusData}
+              dataKey="count"
+              categoryKey="status"
+              type="pie"
+            />
+          </div>
+        </CollapsibleSection>
 
         {/* Activity Stream using ResourceTable component */}
         <div className={styles.section}>

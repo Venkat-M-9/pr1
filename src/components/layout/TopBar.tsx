@@ -1,20 +1,30 @@
 'use client';
 
 import { useTheme } from 'next-themes';
-import { Sun, Moon, Bell } from 'lucide-react';
+import { Sun, Moon, Bell, Menu } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import styles from './TopBar.module.css';
 
 interface Props {
   title?: string;
+  onMobileMenuToggle?: () => void;
 }
 
-export default function TopBar({ title }: Props) {
+export default function TopBar({ title, onMobileMenuToggle }: Props) {
   const { theme, setTheme } = useTheme();
 
   return (
     <header className={styles.topbar}>
       <div className={styles.left}>
+        {onMobileMenuToggle && (
+          <button
+            className={styles.mobileMenuBtn}
+            onClick={onMobileMenuToggle}
+            aria-label="Toggle mobile menu"
+          >
+            <Menu size={18} />
+          </button>
+        )}
         <span className={styles.pageTitle}>{title || 'Overview'}</span>
       </div>
 

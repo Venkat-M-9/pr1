@@ -15,6 +15,20 @@
 .left {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.mobileMenuBtn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .pageTitle {
@@ -79,5 +93,12 @@
 @media (max-width: 768px) {
   .topbar {
     left: 0 !important;
+    padding: 0 16px;
+  }
+  .mobileMenuBtn {
+    display: flex;
+  }
+  .userName {
+    display: none;
   }
 }

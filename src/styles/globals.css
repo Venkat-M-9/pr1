@@ -30,6 +30,7 @@
   --font-sans:     'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono:     'JetBrains Mono', 'Courier New', monospace;
   --transition:    150ms ease;
+  --table-cell-padding: 10px 14px;
 }
 
 [data-theme="dark"] {
@@ -48,6 +49,11 @@
   --shadow-sm:     0 1px 2px rgba(0,0,0,0.4);
   --shadow:        0 2px 8px rgba(0,0,0,0.5);
   --shadow-lg:     0 8px 32px rgba(0,0,0,0.7);
+}
+
+/* Challenge 9: Compact Density Mode */
+[data-density="compact"] {
+  --table-cell-padding: 6px 10px;
 }
 
 /* ─── Reset ─────────────────────────────────────────────────────────────── */
