@@ -1,19 +1,62 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import PageShell from '@/components/layout/PageShell';
 import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
+import RecordDetailView from '@/components/ui/RecordDetailView';
+import EditRecordModal from '@/components/ui/EditRecordModal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useDataContext } from '@/context/DataContext';
 import { Record as SystemRecord } from '@/lib/mockData';
 import { FieldSchema } from '@/lib/exportUtils';
+import { toast } from '@/lib/toast';
 import { ColumnDef } from '@tanstack/react-table';
+import { Star } from 'lucide-react';
 
 export default function DataManagementPage() {
-  const { records, importRecords } = useDataContext();
+  const { records, importRecords, toggleStarRecord, updateRecord, deleteRecord } = useDataContext();
+
+  const [editingRecord, setEditingRecord] = useState<SystemRecord | null>(null);
+  const [deletingRecord, setDeletingRecord] = useState<SystemRecord | null>(null);
 
   const columns = useMemo<ColumnDef<SystemRecord, any>[]>(
     () => [
+      {
+        id: 'starred',
+        header: '★',
+        size: 45,
+        cell: info => {
+          const isStarred = Boolean(info.row.original.starred);
+          return (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                toggleStarRecord(info.row.original.id);
+                toast({
+                  title: isStarred ? 'Unstarred Record' : 'Starred Record',
+                  description: `${info.row.original.id} was ${isStarred ? 'removed from' : 'added to'} starred list.`,
+                  type: 'info',
+                });
+              }}
+              title={isStarred ? 'Unstar record' : 'Star record'}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: isStarred ? '#f59e0b' : 'var(--text-muted)',
+                padding: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Star size={16} fill={isStarred ? '#f59e0b' : 'none'} color={isStarred ? '#f59e0b' : 'currentColor'} />
+            </button>
+          );
+        },
+      },
       { accessorKey: 'id', header: 'Record ID', size: 100 },
       { accessorKey: 'name', header: 'Title / Name', size: 180 },
       {
@@ -35,10 +78,18 @@ export default function DataManagementPage() {
         cell: info => `$${info.getValue().toLocaleString()}`,
       },
     ],
-    []
+    [toggleStarRecord]
   );
 
   const filterGroups = [
+    {
+      id: 'starred',
+      label: 'Starred',
+      options: [
+        { label: 'Starred Only', value: 'true' },
+        { label: 'Unstarred Only', value: 'false' },
+      ],
+    },
     {
       id: 'status',
       label: 'Status',
@@ -85,10 +136,30 @@ export default function DataManagementPage() {
     { key: 'description', label: 'Description', defaultValue: 'Imported via data manager.' },
   ];
 
+  const handleSaveEdit = (updatedRecord: SystemRecord) => {
+    updateRecord(updatedRecord);
+    toast({
+      title: 'Record Updated',
+      description: `${updatedRecord.id} updated successfully.`,
+      type: 'success',
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingRecord) return;
+    deleteRecord(deletingRecord.id);
+    toast({
+      title: 'Record Deleted',
+      description: `${deletingRecord.id} deleted.`,
+      type: 'success',
+    });
+    setDeletingRecord(null);
+  };
+
   return (
     <PageShell
       title="Data Management"
-      description="Performantly query, filter, import, and inspect 5,000+ virtualized system records."
+      description="Performantly query, filter, import, edit, star, and inspect 5,000+ virtualized system records."
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Data Management' }]}
     >
       <ResourceTable<SystemRecord>
@@ -105,65 +176,32 @@ export default function DataManagementPage() {
         onImport={importRecords}
         getDetailTitle={item => item.id}
         renderDetail={selectedRecord => (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Title</span>
-              <h3 style={{ fontSize: 16, fontWeight: 600, marginTop: 2 }}>{selectedRecord.name}</h3>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Status</span>
-                <div style={{ marginTop: 4 }}>
-                  <StatusBadge value={selectedRecord.status} variant="status" />
-                </div>
-              </div>
-              <div>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Priority</span>
-                <div style={{ marginTop: 4 }}>
-                  <StatusBadge value={selectedRecord.priority} variant="priority" />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Owner</span>
-              <p style={{ fontSize: 13, fontWeight: 500, marginTop: 2 }}>{selectedRecord.owner}</p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Created At</span>
-                <p style={{ fontSize: 13, marginTop: 2 }}>{selectedRecord.createdAt}</p>
-              </div>
-              <div>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Updated At</span>
-                <p style={{ fontSize: 13, marginTop: 2 }}>{selectedRecord.updatedAt}</p>
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Financial Value</span>
-              <p style={{ fontSize: 18, fontWeight: 600, marginTop: 2 }}>${selectedRecord.value.toLocaleString()}</p>
-            </div>
-
-            <div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Tags</span>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                {selectedRecord.tags.map(t => (
-                  <StatusBadge key={t} value={t} variant="tag" />
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Description</span>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginTop: 4 }}>
-                {selectedRecord.description}
-              </p>
-            </div>
-          </div>
+          <RecordDetailView
+            record={selectedRecord}
+            onToggleStar={toggleStarRecord}
+            onEdit={rec => setEditingRecord(rec)}
+            onDelete={rec => setDeletingRecord(rec)}
+          />
         )}
+      />
+
+      {/* Edit Record Modal */}
+      <EditRecordModal
+        open={!!editingRecord}
+        onClose={() => setEditingRecord(null)}
+        record={editingRecord}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={!!deletingRecord}
+        onClose={() => setDeletingRecord(null)}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Delete Record"
+        description={`Are you sure you want to delete ${deletingRecord?.id}? This action will permanently remove it from the system.`}
+        confirmText="Delete Record"
+        variant="danger"
       />
     </PageShell>
   );

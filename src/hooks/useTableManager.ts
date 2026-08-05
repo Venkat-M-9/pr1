@@ -58,7 +58,12 @@ export function useTableManager<T extends Record<string, any>>({
 
       // Dynamic filter matching across selectedFilters
       for (const [filterId, filterValue] of Object.entries(selectedFilters)) {
-        if (filterValue && String(item[filterId]) !== String(filterValue)) {
+        if (!filterValue) continue;
+        const itemVal = item[filterId];
+        if (typeof itemVal === 'boolean' || filterValue === 'true' || filterValue === 'false') {
+          const boolVal = Boolean(itemVal);
+          if (String(boolVal) !== filterValue) return false;
+        } else if (String(itemVal) !== String(filterValue)) {
           return false;
         }
       }

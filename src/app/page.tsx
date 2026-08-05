@@ -1,21 +1,27 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import PageShell from '@/components/layout/PageShell';
 import SummaryCard from '@/components/ui/SummaryCard';
 import ChartCard from '@/components/charts/ChartCard';
 import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
 import CollapsibleSection from '@/components/ui/CollapsibleSection';
+import RecordDetailView from '@/components/ui/RecordDetailView';
+import EditRecordModal from '@/components/ui/EditRecordModal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useDataContext } from '@/context/DataContext';
 import { aggregateByMonth, aggregateByStatus, Record as SystemRecord } from '@/lib/mockData';
+import { toast } from '@/lib/toast';
 import { ColumnDef } from '@tanstack/react-table';
-import { Database, Activity, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Database, Activity, CheckCircle, AlertTriangle, Star } from 'lucide-react';
 import styles from './Home.module.css';
 
 export default function HomePage() {
-  // Access central reactive dataset from DataContext
-  const { records } = useDataContext();
+  const { records, toggleStarRecord, updateRecord, deleteRecord } = useDataContext();
+
+  const [editingRecord, setEditingRecord] = useState<SystemRecord | null>(null);
+  const [deletingRecord, setDeletingRecord] = useState<SystemRecord | null>(null);
 
   // Live aggregated analytics calculated directly from shared dataset
   const monthlyData = useMemo(() => aggregateByMonth(records), [records]);
@@ -27,6 +33,41 @@ export default function HomePage() {
 
   const columns = useMemo<ColumnDef<SystemRecord, any>[]>(
     () => [
+      {
+        id: 'starred',
+        header: '★',
+        size: 45,
+        cell: info => {
+          const isStarred = Boolean(info.row.original.starred);
+          return (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                toggleStarRecord(info.row.original.id);
+                toast({
+                  title: isStarred ? 'Unstarred Record' : 'Starred Record',
+                  description: `${info.row.original.id} was ${isStarred ? 'removed from' : 'added to'} starred list.`,
+                  type: 'info',
+                });
+              }}
+              title={isStarred ? 'Unstar record' : 'Star record'}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: isStarred ? '#f59e0b' : 'var(--text-muted)',
+                padding: 2,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Star size={16} fill={isStarred ? '#f59e0b' : 'none'} color={isStarred ? '#f59e0b' : 'currentColor'} />
+            </button>
+          );
+        },
+      },
       { accessorKey: 'id', header: 'ID', size: 90 },
       { accessorKey: 'name', header: 'Record Name', size: 160 },
       {
@@ -46,10 +87,18 @@ export default function HomePage() {
         cell: info => `$${info.getValue().toLocaleString()}`,
       },
     ],
-    []
+    [toggleStarRecord]
   );
 
   const filterGroups = [
+    {
+      id: 'starred',
+      label: 'Starred',
+      options: [
+        { label: 'Starred Only', value: 'true' },
+        { label: 'Unstarred Only', value: 'false' },
+      ],
+    },
     {
       id: 'status',
       label: 'Status',
@@ -72,6 +121,26 @@ export default function HomePage() {
     },
   ];
 
+  const handleSaveEdit = (updatedRecord: SystemRecord) => {
+    updateRecord(updatedRecord);
+    toast({
+      title: 'Record Updated',
+      description: `${updatedRecord.id} saved successfully.`,
+      type: 'success',
+    });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingRecord) return;
+    deleteRecord(deletingRecord.id);
+    toast({
+      title: 'Record Deleted',
+      description: `${deletingRecord.id} was permanently removed.`,
+      type: 'success',
+    });
+    setDeletingRecord(null);
+  };
+
   return (
     <PageShell
       title="System Overview"
@@ -79,7 +148,7 @@ export default function HomePage() {
       breadcrumbs={[{ label: 'Home' }]}
     >
       <div className={styles.container}>
-        {/* Metric Cards Grid - Live accurate metrics from DataContext */}
+        {/* Metric Cards Grid */}
         <div className={styles.grid4}>
           <SummaryCard
             title="Total Records"
@@ -111,7 +180,7 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Charts Row inside CollapsibleSection for Challenge 5 Information Density */}
+        {/* Charts Row */}
         <CollapsibleSection
           title="Analytical Visualizations"
           subtitle="Monthly creation trend & operational status breakdown"
@@ -159,59 +228,35 @@ export default function HomePage() {
             exportable={false}
             getDetailTitle={item => item.id}
             renderDetail={selectedRecord => (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Title</span>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, marginTop: 2 }}>{selectedRecord.name}</h3>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Status</span>
-                    <div style={{ marginTop: 4 }}>
-                      <StatusBadge value={selectedRecord.status} variant="status" />
-                    </div>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Priority</span>
-                    <div style={{ marginTop: 4 }}>
-                      <StatusBadge value={selectedRecord.priority} variant="priority" />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Owner</span>
-                  <p style={{ fontSize: 13, fontWeight: 500, marginTop: 2 }}>{selectedRecord.owner}</p>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Created At</span>
-                    <p style={{ fontSize: 13, marginTop: 2 }}>{selectedRecord.createdAt}</p>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Updated At</span>
-                    <p style={{ fontSize: 13, marginTop: 2 }}>{selectedRecord.updatedAt}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Financial Value</span>
-                  <p style={{ fontSize: 18, fontWeight: 600, marginTop: 2 }}>${selectedRecord.value.toLocaleString()}</p>
-                </div>
-
-                <div>
-                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Description</span>
-                  <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5, marginTop: 4 }}>
-                    {selectedRecord.description}
-                  </p>
-                </div>
-              </div>
+              <RecordDetailView
+                record={selectedRecord}
+                onToggleStar={toggleStarRecord}
+                onEdit={rec => setEditingRecord(rec)}
+                onDelete={rec => setDeletingRecord(rec)}
+              />
             )}
           />
         </div>
       </div>
+
+      {/* Edit Record Modal */}
+      <EditRecordModal
+        open={!!editingRecord}
+        onClose={() => setEditingRecord(null)}
+        record={editingRecord}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={!!deletingRecord}
+        onClose={() => setDeletingRecord(null)}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Delete Record"
+        description={`Are you sure you want to delete ${deletingRecord?.id}? This action will permanently remove it from the system.`}
+        confirmText="Delete Record"
+        variant="danger"
+      />
     </PageShell>
   );
 }

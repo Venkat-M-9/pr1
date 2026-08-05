@@ -15,6 +15,9 @@ interface DataContextType {
   importEntries: (newEntries: Entry[]) => void;
   addRecord: (record: SystemRecord) => void;
   addEntry: (entry: Entry) => void;
+  toggleStarRecord: (id: string) => void;
+  updateRecord: (record: SystemRecord) => void;
+  deleteRecord: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -40,6 +43,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setEntries(prev => [entry, ...prev]);
   };
 
+  const toggleStarRecord = (id: string) => {
+    setRecords(prev =>
+      prev.map(r => (r.id === id ? { ...r, starred: !r.starred } : r))
+    );
+  };
+
+  const updateRecord = (updated: SystemRecord) => {
+    setRecords(prev =>
+      prev.map(r => (r.id === updated.id ? { ...r, ...updated, updatedAt: new Date().toISOString().split('T')[0] } : r))
+    );
+  };
+
+  const deleteRecord = (id: string) => {
+    setRecords(prev => prev.filter(r => r.id !== id));
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -49,6 +68,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         importEntries,
         addRecord,
         addEntry,
+        toggleStarRecord,
+        updateRecord,
+        deleteRecord,
       }}
     >
       {children}

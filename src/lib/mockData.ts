@@ -18,6 +18,7 @@ export interface Record {
   progress: number;
   tags: string[];
   description: string;
+  starred?: boolean;
 }
 
 export interface Member {
@@ -107,6 +108,7 @@ export function generateRecords(count = 5000): Record[] {
       progress: Math.round(r() * 100),
       tags,
       description: `This is a description for record ${id}. It contains relevant context.`,
+      starred: r() > 0.88,
     };
   });
 }
