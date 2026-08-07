@@ -3,14 +3,14 @@
 /* ─── Design Tokens ─────────────────────────────────────────────────────── */
 :root {
   --bg:            #f6f4ee;
-  --bg-subtle:     #f0ede6;
+  --bg-subtle:     #eee9e0;
   --surface:       #ffffff;
-  --surface-hover: #faf9f6;
-  --border:        #e7e4dc;
-  --border-strong: #d0ccc2;
+  --surface-hover: #f5f2eb;
+  --border:        #d5d0c5;
+  --border-strong: #b5b0a3;
   --text:          #2c2a26;
-  --text-muted:    #7d786d;
-  --text-faint:    #a8a397;
+  --text-muted:    #6e6a60;
+  --text-faint:    #a09b8f;
   --accent:        #2c2a26;
   --accent-hover:  #171614;
   --accent-fg:     #ffffff;
@@ -19,13 +19,14 @@
   --success:       #1e7e34;
   --info:          #2563eb;
   --row-selected:  #edf4fc;
+  --row-hover:     #edf4fc;
   --radius-sm:     4px;
   --radius:        8px;
   --radius-lg:     12px;
   --radius-xl:     16px;
-  --shadow-sm:     0 1px 2px rgba(0,0,0,0.04);
-  --shadow:        0 2px 8px rgba(0,0,0,0.06);
-  --shadow-lg:     0 8px 24px rgba(0,0,0,0.08);
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.06);
+  --shadow:        0 2px 10px rgba(0,0,0,0.08);
+  --shadow-lg:     0 8px 24px rgba(0,0,0,0.12);
   --sidebar-w:     240px;
   --topbar-h:      56px;
   --font-sans:     'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -35,18 +36,24 @@
 }
 
 [data-theme="dark"] {
-  --bg:            #0a0a0a;
-  --bg-subtle:     #0f0f0f;
-  --surface:       #161616;
-  --surface-hover: #1e1e1e;
-  --border:        #262626;
-  --border-strong: #333333;
-  --text:          #f0f0f0;
-  --text-muted:    #888888;
-  --text-faint:    #555555;
-  --accent:        #f0f0f0;
+  --bg:            #0f1115;
+  --bg-subtle:     #161920;
+  --surface:       #1e222b;
+  --surface-hover: #2a2f3d;
+  --border:        #2c3240;
+  --border-strong: #3d4558;
+  --text:          #f3f4f6;
+  --text-muted:    #9ca3af;
+  --text-faint:    #6b7280;
+  --accent:        #f3f4f6;
   --accent-hover:  #ffffff;
-  --accent-fg:     #0a0a0a;
+  --accent-fg:     #0f1115;
+  --danger:        #ef4444;
+  --warning:       #f59e0b;
+  --success:       #10b981;
+  --info:          #3b82f6;
+  --row-selected:  #252f48;
+  --row-hover:     #252f48;
   --shadow-sm:     0 1px 2px rgba(0,0,0,0.4);
   --shadow:        0 2px 8px rgba(0,0,0,0.5);
   --shadow-lg:     0 8px 32px rgba(0,0,0,0.7);

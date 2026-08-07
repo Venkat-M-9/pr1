@@ -17,6 +17,7 @@ export { default as ErrorState } from './ui/ErrorState';
 export { default as FilterBar } from './ui/FilterBar';
 export { default as ImportModal } from './ui/ImportModal';
 export { default as LoadingSkeleton } from './ui/LoadingSkeleton';
+export { default as BulkEditModal } from './ui/BulkEditModal';
 export { default as EditRecordModal } from './ui/EditRecordModal';
 export { default as RecordDetailView } from './ui/RecordDetailView';
 export { default as TopFlaggedCard } from './ui/TopFlaggedCard';

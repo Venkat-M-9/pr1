@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Modal from '@/components/ui/Modal';
-import { Record as SystemRecord, Status, Priority, Category } from '@/lib/mockData';
+import { Record as SystemRecord, Status, Priority, getPriorityFromValue } from '@/lib/mockData';
 
 interface Props {
   open: boolean;
@@ -12,14 +12,10 @@ interface Props {
 }
 
 const STATUSES: Status[] = ['active', 'inactive', 'pending', 'archived'];
-const PRIORITIES: Priority[] = ['low', 'medium', 'high', 'critical'];
-const CATEGORIES: Category[] = ['alpha', 'beta', 'gamma', 'delta', 'epsilon'];
 
 export default function EditRecordModal({ open, onClose, record, onSave }: Props) {
   const [name, setName] = useState('');
   const [status, setStatus] = useState<Status>('active');
-  const [priority, setPriority] = useState<Priority>('medium');
-  const [category, setCategory] = useState<Category>('alpha');
   const [owner, setOwner] = useState('');
   const [value, setValue] = useState<number>(0);
   const [description, setDescription] = useState('');
@@ -28,8 +24,6 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
     if (record) {
       setName(record.name);
       setStatus(record.status);
-      setPriority(record.priority);
-      setCategory(record.category);
       setOwner(record.owner);
       setValue(record.value);
       setDescription(record.description || '');
@@ -38,16 +32,18 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
 
   if (!record) return null;
 
+  const currentPriority = getPriorityFromValue(value);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const numVal = Number(value) || 0;
     onSave({
       ...record,
       name,
       status,
-      priority,
-      category,
+      priority: getPriorityFromValue(numVal),
       owner,
-      value: Number(value) || 0,
+      value: numVal,
       description,
     });
     onClose();
@@ -142,38 +138,6 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
           </div>
 
           <div>
-            <label style={labelStyle}>Priority</label>
-            <select
-              value={priority}
-              onChange={e => setPriority(e.target.value as Priority)}
-              style={inputStyle}
-            >
-              {PRIORITIES.map(p => (
-                <option key={p} value={p}>
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <label style={labelStyle}>Category</label>
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value as Category)}
-              style={inputStyle}
-            >
-              {CATEGORIES.map(c => (
-                <option key={c} value={c}>
-                  {c.charAt(0).toUpperCase() + c.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
             <label style={labelStyle}>Owner</label>
             <input
               type="text"
@@ -189,12 +153,15 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
           <label style={labelStyle}>Financial Value ($)</label>
           <input
             type="number"
-            step="0.01"
+            step="any"
             min="0"
             value={value}
             onChange={e => setValue(parseFloat(e.target.value) || 0)}
             style={inputStyle}
           />
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+            Auto-assigned Priority: <strong style={{ textTransform: 'capitalize' }}>{currentPriority}</strong> (Critical: $75k+, High: $50k+, Medium: $25k+, Low: &lt;$25k)
+          </p>
         </div>
 
         <div>

@@ -9,28 +9,26 @@ import { useDataContext } from '@/context/DataContext';
 import {
   aggregateByMonth,
   aggregateByStatus,
-  aggregateByCategory,
   aggregateByPriority,
 } from '@/lib/mockData';
-import { BarChart2, PieChart as PieIcon, TrendingUp, Filter } from 'lucide-react';
+import { BarChart2, PieChart as PieIcon, TrendingUp, Filter, AlertTriangle } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const { records: allRecords } = useDataContext();
 
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedPriority, setSelectedPriority] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
 
   const filteredRecords = useMemo(() => {
     return allRecords.filter(r => {
-      if (selectedCategory && r.category !== selectedCategory) return false;
+      if (selectedPriority && r.priority !== selectedPriority) return false;
       if (selectedStatus && r.status !== selectedStatus) return false;
       return true;
     });
-  }, [allRecords, selectedCategory, selectedStatus]);
+  }, [allRecords, selectedPriority, selectedStatus]);
 
   const monthlyTrend = useMemo(() => aggregateByMonth(filteredRecords), [filteredRecords]);
   const statusDist = useMemo(() => aggregateByStatus(filteredRecords), [filteredRecords]);
-  const categoryDist = useMemo(() => aggregateByCategory(filteredRecords), [filteredRecords]);
   const priorityDist = useMemo(() => aggregateByPriority(filteredRecords), [filteredRecords]);
 
   const totalValue = useMemo(() => filteredRecords.reduce((acc, r) => acc + r.value, 0), [filteredRecords]);
@@ -39,16 +37,20 @@ export default function AnalyticsPage() {
     [filteredRecords, totalValue]
   );
 
+  const highValCount = useMemo(
+    () => filteredRecords.filter(r => r.priority === 'critical' || r.priority === 'high').length,
+    [filteredRecords]
+  );
+
   const filterGroups = [
     {
-      id: 'category',
-      label: 'Category',
+      id: 'priority',
+      label: 'Priority',
       options: [
-        { label: 'Alpha', value: 'alpha' },
-        { label: 'Beta', value: 'beta' },
-        { label: 'Gamma', value: 'gamma' },
-        { label: 'Delta', value: 'delta' },
-        { label: 'Epsilon', value: 'epsilon' },
+        { label: 'Low (<$25k)', value: 'low' },
+        { label: 'Medium ($25k-$50k)', value: 'medium' },
+        { label: 'High ($50k-$75k)', value: 'high' },
+        { label: 'Critical ($75k+)', value: 'critical' },
       ],
     },
     {
@@ -70,19 +72,19 @@ export default function AnalyticsPage() {
       breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Analytics' }]}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Reusable FilterBar reusing same interaction pattern for Challenge 2 */}
+        {/* Reusable FilterBar reusing same interaction pattern */}
         <FilterBar
           searchQuery=""
           onSearchChange={() => {}}
           searchPlaceholder="Global analytical slice..."
           filters={filterGroups}
-          selectedFilters={{ category: selectedCategory, status: selectedStatus }}
+          selectedFilters={{ priority: selectedPriority, status: selectedStatus }}
           onFilterChange={(id, val) => {
-            if (id === 'category') setSelectedCategory(val);
+            if (id === 'priority') setSelectedPriority(val);
             if (id === 'status') setSelectedStatus(val);
           }}
           onResetFilters={() => {
-            setSelectedCategory('');
+            setSelectedPriority('');
             setSelectedStatus('');
           }}
         />
@@ -108,10 +110,10 @@ export default function AnalyticsPage() {
             icon={<BarChart2 size={18} />}
           />
           <SummaryCard
-            title="Categories Tracked"
-            value={categoryDist.length}
-            subtitle="Distinct classifications"
-            icon={<PieIcon size={18} />}
+            title="High / Critical Records"
+            value={highValCount.toLocaleString()}
+            subtitle="Financial evaluation >= $50k"
+            icon={<AlertTriangle size={18} color="#c5221f" />}
           />
         </div>
 
@@ -126,11 +128,11 @@ export default function AnalyticsPage() {
             type="line"
           />
           <ChartCard
-            title="Category Portfolio Value"
-            subtitle="Financial total per category slice"
-            data={categoryDist}
+            title="Monthly Portfolio Value ($)"
+            subtitle="Financial total cumulative per month"
+            data={monthlyTrend}
             dataKey="value"
-            categoryKey="category"
+            categoryKey="month"
             type="bar"
           />
           <ChartCard
@@ -142,8 +144,8 @@ export default function AnalyticsPage() {
             type="pie"
           />
           <ChartCard
-            title="Priority Distribution"
-            subtitle="Urgency tier concentration"
+            title="Money-Based Priority Breakdown"
+            subtitle="Urgency tier concentration derived from valuation"
             data={priorityDist}
             dataKey="count"
             categoryKey="priority"

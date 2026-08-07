@@ -3,14 +3,12 @@
 
 export type Status = 'active' | 'inactive' | 'pending' | 'archived';
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
-export type Category = 'alpha' | 'beta' | 'gamma' | 'delta' | 'epsilon';
 
 export interface Record {
   id: string;
   name: string;
   status: Status;
   priority: Priority;
-  category: Category;
   owner: string;
   createdAt: string;
   updatedAt: string;
@@ -50,7 +48,6 @@ export interface Item {
   id: string;
   name: string;
   sku: string;
-  category: Category;
   status: Status;
   quantity: number;
   unit: string;
@@ -69,8 +66,6 @@ function seededRandom(seed: number) {
 }
 
 const STATUSES: Status[] = ['active', 'inactive', 'pending', 'archived'];
-const PRIORITIES: Priority[] = ['low', 'medium', 'high', 'critical'];
-const CATEGORIES: Category[] = ['alpha', 'beta', 'gamma', 'delta', 'epsilon'];
 const OWNERS = ['Alice Chen', 'Bob Martin', 'Carol White', 'David Kim', 'Eva Rossi', 'Frank Liu', 'Grace Park', 'Henry Scott'];
 const DEPARTMENTS = ['Engineering', 'Design', 'Product', 'Marketing', 'Sales', 'Support', 'Finance', 'HR'];
 const ROLES = ['Admin', 'Editor', 'Viewer', 'Manager', 'Analyst', 'Developer'];
@@ -78,6 +73,13 @@ const TAGS_POOL = ['urgent', 'review', 'blocked', 'approved', 'draft', 'final', 
 const SUPPLIERS = ['Acme Corp', 'GlobalTech', 'NexaSupply', 'ProSource', 'TechMart'];
 const UNITS = ['pcs', 'kg', 'ltr', 'box', 'set'];
 const ENTRY_TYPES = ['invoice', 'receipt', 'credit', 'debit', 'transfer'];
+
+export function getPriorityFromValue(value: number): Priority {
+  if (value >= 75000) return 'critical';
+  if (value >= 50000) return 'high';
+  if (value >= 20000) return 'medium';
+  return 'low';
+}
 
 function pick<T>(arr: T[], r: () => number): T {
   return arr[Math.floor(r() * arr.length)];
@@ -95,19 +97,23 @@ export function generateRecords(count = 5000): Record[] {
     const tags: string[] = [];
     const tagCount = Math.floor(r() * 3);
     for (let t = 0; t < tagCount; t++) tags.push(pick(TAGS_POOL, r));
+    
+    // Generate realistic money amounts spread between $2,000 and $142,000
+    const value = Math.round((r() * 140000 + 2000) * 100) / 100;
+    const priority = getPriorityFromValue(value);
+
     return {
       id: `REC-${id}`,
       name: `Record ${id}`,
       status: pick(STATUSES, r),
-      priority: pick(PRIORITIES, r),
-      category: pick(CATEGORIES, r),
+      priority,
       owner: pick(OWNERS, r),
       createdAt: formatDate(Math.floor(r() * 365)),
       updatedAt: formatDate(Math.floor(r() * 365) + 365),
-      value: Math.round(r() * 100000) / 100,
+      value,
       progress: Math.round(r() * 100),
       tags,
-      description: `This is a description for record ${id}. It contains relevant context.`,
+      description: `Financial valuation evaluation for system record ${id}.`,
       starred: r() > 0.88,
     };
   });
@@ -165,7 +171,6 @@ export function generateItems(count = 2000): Item[] {
       id: `ITM-${id}`,
       name,
       sku: `SKU-${String(Math.floor(r() * 999999)).padStart(6, '0')}`,
-      category: pick(CATEGORIES, r),
       status: pick(STATUSES, r),
       quantity: Math.floor(r() * 1000),
       unit: pick(UNITS, r),
@@ -193,15 +198,6 @@ export function aggregateByStatus(records: Record[]): { status: string; count: n
   const map = new Map<string, number>();
   records.forEach(r => map.set(r.status, (map.get(r.status) || 0) + 1));
   return Array.from(map.entries()).map(([status, count]) => ({ status, count }));
-}
-
-export function aggregateByCategory(records: Record[]): { category: string; count: number; value: number }[] {
-  const map = new Map<string, { count: number; value: number }>();
-  records.forEach(r => {
-    const existing = map.get(r.category) || { count: 0, value: 0 };
-    map.set(r.category, { count: existing.count + 1, value: existing.value + r.value });
-  });
-  return Array.from(map.entries()).map(([category, data]) => ({ category, ...data }));
 }
 
 export function aggregateByPriority(records: Record[]): { priority: string; count: number }[] {

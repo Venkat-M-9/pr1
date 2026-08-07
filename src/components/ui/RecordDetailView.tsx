@@ -13,14 +13,32 @@ interface Props {
 }
 
 export default function RecordDetailView({ record, onToggleStar, onEdit, onDelete }: Props) {
-  const [activeTab, setActiveTab] = useState<'alerts' | 'events' | 'stream'>('alerts');
+  const [activeTab, setActiveTab] = useState<'audit' | 'financial' | 'raw'>('audit');
   const isStarred = Boolean(record.starred);
 
-  // Mock sub-events matching Image 1 alerts table
-  const mockAlerts = [
-    { severity: 'High', rule: 'DNS threat match', triggered: '14:14:41', scope: 'Global', status: 'Open' },
-    { severity: 'High', rule: 'Clipboard sensitive pattern', triggered: '14:12:05', scope: 'Global', status: 'Open' },
-    { severity: 'Medium', rule: 'USB insert', triggered: '14:15:58', scope: 'Global', status: 'Open' },
+  // 100% Dynamic Audit Events constructed directly from real record attributes
+  const dynamicAuditEvents = [
+    {
+      severity: record.priority === 'critical' || record.priority === 'high' ? 'High' : 'Medium',
+      rule: `Money-based Priority set to ${record.priority.toUpperCase()}`,
+      triggered: record.updatedAt,
+      scope: 'Financial',
+      status: record.status,
+    },
+    {
+      severity: record.value >= 50000 ? 'High' : 'Low',
+      rule: `Financial evaluation registered ($${record.value.toLocaleString()})`,
+      triggered: record.createdAt,
+      scope: 'Valuation',
+      status: 'active',
+    },
+    {
+      severity: 'Low',
+      rule: `Record owner assigned to ${record.owner}`,
+      triggered: record.createdAt,
+      scope: 'System',
+      status: 'active',
+    },
   ];
 
   return (
@@ -30,10 +48,8 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>{record.id}</h3>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', background: 'var(--bg-subtle)', padding: '2px 8px', borderRadius: 'var(--radius-sm)' }}>
-              {record.category}
-            </span>
             <StatusBadge value={record.status} variant="status" />
+            <StatusBadge value={record.priority} variant="priority" />
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
             Assigned to {record.owner} · {record.description}
@@ -112,7 +128,7 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
         </div>
       </div>
 
-      {/* Metadata Grid matching Image 1 */}
+      {/* Metadata Grid */}
       <div
         style={{
           display: 'grid',
@@ -137,15 +153,15 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
           <p style={{ fontSize: 13, color: 'var(--text)', marginTop: 4 }}>{record.updatedAt}</p>
         </div>
         <div>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Risk / Value</span>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#c5221f', marginTop: 4 }}>${record.value.toLocaleString()}</p>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Financial Value</span>
+          <p style={{ fontSize: 14, fontWeight: 700, color: '#1e7e34', marginTop: 4 }}>${record.value.toLocaleString()}</p>
         </div>
       </div>
 
-      {/* Sub-Tabs matching Image 1: Alerts | Correlated events | Raw stream */}
+      {/* Sub-Tabs: Audit Events | Financial Audit | Raw Fields */}
       <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', gap: 20 }}>
-        {(['alerts', 'events', 'stream'] as const).map(tab => {
-          const labelMap = { alerts: 'Alerts', events: 'Correlated events', stream: 'Raw stream' };
+        {(['audit', 'financial', 'raw'] as const).map(tab => {
+          const labelMap = { audit: 'Audit Events', financial: 'Financial Audit', raw: 'Raw Fields' };
           const isActive = activeTab === tab;
           return (
             <button
@@ -168,24 +184,24 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
         })}
       </div>
 
-      {/* Tab Content: Sub-table with Severity Dots matching Image 1 */}
-      {activeTab === 'alerts' && (
+      {/* Tab Content */}
+      {activeTab === 'audit' && (
         <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
             <thead>
               <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '8px 12px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Severity</th>
-                <th style={{ padding: '8px 12px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Rule</th>
-                <th style={{ padding: '8px 12px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Triggered</th>
+                <th style={{ padding: '8px 12px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Audit Rule</th>
+                <th style={{ padding: '8px 12px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Triggered Date</th>
                 <th style={{ padding: '8px 12px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Scope</th>
                 <th style={{ padding: '8px 12px', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Status</th>
               </tr>
             </thead>
             <tbody>
-              {mockAlerts.map((row, i) => (
-                <tr key={i} style={{ borderBottom: i === mockAlerts.length - 1 ? 'none' : '1px solid var(--border)' }}>
+              {dynamicAuditEvents.map((row, i) => (
+                <tr key={i} style={{ borderBottom: i === dynamicAuditEvents.length - 1 ? 'none' : '1px solid var(--border)' }}>
                   <td style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: row.severity === 'High' ? '#c5221f' : '#b06000' }} />
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: row.severity === 'High' ? '#c5221f' : row.severity === 'Medium' ? '#b06000' : '#1e7e34' }} />
                     <span style={{ fontWeight: 500 }}>{row.severity}</span>
                   </td>
                   <td style={{ padding: '8px 12px' }}>{row.rule}</td>
@@ -201,10 +217,27 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
         </div>
       )}
 
-      {activeTab !== 'alerts' && (
-        <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
-          No {activeTab === 'events' ? 'correlated events' : 'raw stream entries'} detected for {record.id}.
+      {activeTab === 'financial' && (
+        <div style={{ padding: 16, background: 'var(--bg-subtle)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ color: 'var(--text-muted)' }}>Evaluation Value:</span>
+            <strong style={{ color: '#1e7e34' }}>${record.value.toLocaleString()}</strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ color: 'var(--text-muted)' }}>Money-Based Priority:</span>
+            <strong style={{ textTransform: 'capitalize' }}>{record.priority}</strong>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Completion Progress:</span>
+            <strong>{record.progress}%</strong>
+          </div>
         </div>
+      )}
+
+      {activeTab === 'raw' && (
+        <pre style={{ padding: 12, background: 'var(--bg-subtle)', borderRadius: 'var(--radius)', fontSize: 11, overflowX: 'auto', color: 'var(--text)' }}>
+          {JSON.stringify(record, null, 2)}
+        </pre>
       )}
     </div>
   );

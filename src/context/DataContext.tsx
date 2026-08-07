@@ -4,6 +4,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import {
   generateRecords,
   generateEntries,
+  getPriorityFromValue,
   Record as SystemRecord,
   Entry,
 } from '@/lib/mockData';
@@ -18,6 +19,8 @@ interface DataContextType {
   toggleStarRecord: (id: string) => void;
   updateRecord: (record: SystemRecord) => void;
   deleteRecord: (id: string) => void;
+  deleteRecords: (ids: string[]) => void;
+  updateRecords: (ids: string[], updates: Partial<SystemRecord>) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -50,13 +53,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   const updateRecord = (updated: SystemRecord) => {
+    const priority = getPriorityFromValue(updated.value);
+    const updatedRecord = { ...updated, priority, updatedAt: new Date().toISOString().split('T')[0] };
     setRecords(prev =>
-      prev.map(r => (r.id === updated.id ? { ...r, ...updated, updatedAt: new Date().toISOString().split('T')[0] } : r))
+      prev.map(r => (r.id === updated.id ? updatedRecord : r))
     );
   };
 
   const deleteRecord = (id: string) => {
     setRecords(prev => prev.filter(r => r.id !== id));
+  };
+
+  const deleteRecords = (ids: string[]) => {
+    const set = new Set(ids);
+    setRecords(prev => prev.filter(r => !set.has(r.id)));
+  };
+
+  const updateRecords = (ids: string[], updates: Partial<SystemRecord>) => {
+    const set = new Set(ids);
+    const today = new Date().toISOString().split('T')[0];
+    setRecords(prev =>
+      prev.map(r => {
+        if (!set.has(r.id)) return r;
+        const nextVal = updates.value !== undefined ? updates.value : r.value;
+        const nextPriority = updates.value !== undefined ? getPriorityFromValue(nextVal) : (updates.priority || r.priority);
+        return { ...r, ...updates, value: nextVal, priority: nextPriority, updatedAt: today };
+      })
+    );
   };
 
   return (
@@ -71,6 +94,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         toggleStarRecord,
         updateRecord,
         deleteRecord,
+        deleteRecords,
+        updateRecords,
       }}
     >
       {children}

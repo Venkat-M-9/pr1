@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import { ColumnDef, SortingState } from '@tanstack/react-table';
 import DataTable from '@/components/table/DataTable';
 import FilterBar from '@/components/ui/FilterBar';
@@ -30,6 +30,7 @@ export interface ResourceTableProps<TData> {
   getDetailTitle?: (item: TData) => string;
   actions?: ReactNode;
   initialSorting?: SortingState;
+  onFilteredDataChange?: (filteredData: TData[]) => void;
 }
 
 export default function ResourceTable<TData extends Record<string, any>>({
@@ -49,6 +50,7 @@ export default function ResourceTable<TData extends Record<string, any>>({
   getDetailTitle,
   actions,
   initialSorting = [{ id: 'id', desc: false }],
+  onFilteredDataChange,
 }: ResourceTableProps<TData>) {
   // Challenge 9: Consume default page size preference if prop is not explicitly passed
   const { pageSize: prefPageSize } = usePreferences();
@@ -73,6 +75,22 @@ export default function ResourceTable<TData extends Record<string, any>>({
     searchFields,
     initialSorting,
   });
+
+  const prevFingerprintRef = useRef<string>('');
+
+  // Guard against infinite re-render loop by checking dataset fingerprint change
+  useEffect(() => {
+    if (!onFilteredDataChange) return;
+    const count = filteredData.length;
+    const firstId = count > 0 ? (filteredData[0].id || '') : '';
+    const lastId = count > 0 ? (filteredData[count - 1].id || '') : '';
+    const fingerprint = `${count}:${firstId}:${lastId}`;
+
+    if (prevFingerprintRef.current !== fingerprint) {
+      prevFingerprintRef.current = fingerprint;
+      onFilteredDataChange(filteredData);
+    }
+  }, [filteredData, onFilteredDataChange]);
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isExportConfirmOpen, setIsExportConfirmOpen] = useState(false);

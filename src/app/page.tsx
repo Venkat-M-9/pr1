@@ -10,75 +10,111 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import CollapsibleSection from '@/components/ui/CollapsibleSection';
 import RecordDetailView from '@/components/ui/RecordDetailView';
 import EditRecordModal from '@/components/ui/EditRecordModal';
+import BulkEditModal from '@/components/ui/BulkEditModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useDataContext } from '@/context/DataContext';
-import { Record as SystemRecord } from '@/lib/mockData';
+import { Record as SystemRecord, Status, Priority } from '@/lib/mockData';
 import { toast } from '@/lib/toast';
 import { ColumnDef } from '@tanstack/react-table';
-import { Database, Activity, CheckCircle, AlertTriangle, Star } from 'lucide-react';
+import { Database, Activity, CheckCircle, AlertTriangle, CheckSquare, Edit3, Trash2, DollarSign } from 'lucide-react';
 import styles from './Home.module.css';
 
 export default function HomePage() {
-  const { records, toggleStarRecord, updateRecord, deleteRecord } = useDataContext();
+  const { records, toggleStarRecord, updateRecord, deleteRecord, deleteRecords, updateRecords } = useDataContext();
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingRecord, setEditingRecord] = useState<SystemRecord | null>(null);
   const [deletingRecord, setDeletingRecord] = useState<SystemRecord | null>(null);
-  const [selectedRecordForDrawer, setSelectedRecordForDrawer] = useState<SystemRecord | null>(null);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
+  // 100% Dynamic Metrics calculated directly from DataContext system records
   const activeCount = useMemo(() => records.filter(r => r.status === 'active').length, [records]);
-  const pendingCount = useMemo(() => records.filter(r => r.status === 'pending').length, [records]);
+  const highPriorityCount = useMemo(() => records.filter(r => r.priority === 'critical' || r.priority === 'high').length, [records]);
+  const totalPortfolioValue = useMemo(() => records.reduce((acc, r) => acc + r.value, 0), [records]);
 
-  // Stacked bar chart data matching Image 2 ("Alerts, last 7 days")
-  const weeklyAlertsData = [
-    { day: 'Mon', Low: 22, Medium: 18, High: 12 },
-    { day: 'Tue', Low: 28, Medium: 25, High: 15 },
-    { day: 'Wed', Low: 18, Medium: 14, High: 9 },
-    { day: 'Thu', Low: 30, Medium: 22, High: 19 },
-    { day: 'Fri', Low: 24, Medium: 16, High: 14 },
-    { day: 'Sat', Low: 14, Medium: 10, High: 6 },
-    { day: 'Today', Low: 26, Medium: 24, High: 22 },
-  ];
+  // 100% Dynamic Priority Breakdown by Financial Value Tier for the Stacked Bar Chart
+  const financialTierPriorityData = useMemo(() => {
+    const tiers: Record<string, { tier: string; Low: number; Medium: number; High: number; Critical: number }> = {
+      low: { tier: '< $25k', Low: 0, Medium: 0, High: 0, Critical: 0 },
+      medium: { tier: '$25k - $50k', Low: 0, Medium: 0, High: 0, Critical: 0 },
+      high: { tier: '$50k - $75k', Low: 0, Medium: 0, High: 0, Critical: 0 },
+      critical: { tier: '$75k+', Low: 0, Medium: 0, High: 0, Critical: 0 },
+    };
+
+    records.forEach(r => {
+      let tierKey = 'low';
+      if (r.value >= 75000) tierKey = 'critical';
+      else if (r.value >= 50000) tierKey = 'high';
+      else if (r.value >= 25000) tierKey = 'medium';
+
+      if (r.priority === 'low') tiers[tierKey].Low++;
+      else if (r.priority === 'medium') tiers[tierKey].Medium++;
+      else if (r.priority === 'high') tiers[tierKey].High++;
+      else if (r.priority === 'critical') tiers[tierKey].Critical++;
+    });
+
+    return Object.values(tiers);
+  }, [records]);
 
   const stackedKeys = [
-    { key: 'Low', color: '#d0ccc2', label: 'Low' },
-    { key: 'Medium', color: '#b06000', label: 'Medium' },
-    { key: 'High', color: '#c5221f', label: 'High' },
+    { key: 'Low', color: '#a09b8f', label: 'Low (<$25k)' },
+    { key: 'Medium', color: '#b06000', label: 'Medium ($25k-$50k)' },
+    { key: 'High', color: '#2563eb', label: 'High ($50k-$75k)' },
+    { key: 'Critical', color: '#c5221f', label: 'Critical ($75k+)' },
   ];
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllVisible = (visibleRecords: SystemRecord[]) => {
+    const allVisibleSelected = visibleRecords.length > 0 && visibleRecords.every(r => selectedIds.has(r.id));
+    if (allVisibleSelected) {
+      setSelectedIds(new Set());
+    } else {
+      const next = new Set(selectedIds);
+      visibleRecords.forEach(r => next.add(r.id));
+      setSelectedIds(next);
+    }
+  };
 
   const columns = useMemo<ColumnDef<SystemRecord, any>[]>(
     () => [
       {
-        id: 'starred',
-        header: '★',
+        id: 'select',
+        header: ({ table }) => {
+          const currentRows = table.getRowModel().rows.map(r => r.original);
+          const isAllSelected = currentRows.length > 0 && currentRows.every(r => selectedIds.has(r.id));
+          return (
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={() => toggleSelectAllVisible(currentRows)}
+              title="Select all visible records"
+              style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--accent)' }}
+            />
+          );
+        },
         size: 45,
         cell: info => {
-          const isStarred = Boolean(info.row.original.starred);
+          const isSelected = selectedIds.has(info.row.original.id);
           return (
-            <button
-              type="button"
-              onClick={e => {
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={e => {
                 e.stopPropagation();
-                toggleStarRecord(info.row.original.id);
-                toast({
-                  title: isStarred ? 'Unstarred Record' : 'Starred Record',
-                  description: `${info.row.original.id} was ${isStarred ? 'removed from' : 'added to'} starred list.`,
-                  type: 'info',
-                });
+                toggleSelectRow(info.row.original.id);
               }}
-              title={isStarred ? 'Unstar record' : 'Star record'}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: isStarred ? '#f59e0b' : 'var(--text-muted)',
-                padding: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Star size={16} fill={isStarred ? '#f59e0b' : 'none'} color={isStarred ? '#f59e0b' : 'currentColor'} />
-            </button>
+              title="Select record"
+              style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--accent)' }}
+            />
           );
         },
       },
@@ -101,7 +137,7 @@ export default function HomePage() {
         cell: info => `$${info.getValue().toLocaleString()}`,
       },
     ],
-    [toggleStarRecord]
+    [selectedIds, records]
   );
 
   const filterGroups = [
@@ -155,14 +191,38 @@ export default function HomePage() {
     setDeletingRecord(null);
   };
 
+  const handleExecuteBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    deleteRecords(ids);
+    toast({
+      title: 'Batch Delete Successful',
+      description: `Successfully deleted ${ids.length} selected items.`,
+      type: 'success',
+    });
+    setSelectedIds(new Set());
+    setIsBulkDeleteConfirmOpen(false);
+  };
+
+  const handleExecuteBulkEdit = (updates: { status?: Status; priority?: Priority }) => {
+    const ids = Array.from(selectedIds);
+    updateRecords(ids, updates);
+    toast({
+      title: 'Batch Edit Successful',
+      description: `Updated ${ids.length} selected items.`,
+      type: 'success',
+    });
+    setSelectedIds(new Set());
+    setIsBulkEditOpen(false);
+  };
+
   return (
     <PageShell
       title="Overview"
-      description="Org-wide · all groups · last 24 hours"
+      description="Live operational summary & real-time analytics"
       breadcrumbs={[{ label: 'Home' }]}
     >
       <div className={styles.container}>
-        {/* Metric Cards Grid matching Image 2 */}
+        {/* Metric Cards Grid - 100% Dynamic from DataContext */}
         <div className={styles.grid4}>
           <SummaryCard
             title="RECORDS MONITORED"
@@ -173,62 +233,143 @@ export default function HomePage() {
           <SummaryCard
             title="ACTIVE NOW"
             value={activeCount.toLocaleString()}
-            subtitle="Operational"
+            subtitle="Operational items"
             icon={<CheckCircle size={18} />}
           />
           <SummaryCard
-            title="OPEN ALERTS"
-            value="4"
-            subtitle="Action needed"
+            title="HIGH / CRITICAL ITEMS"
+            value={highPriorityCount.toLocaleString()}
+            subtitle="Priority review"
             icon={<AlertTriangle size={18} color="#c5221f" />}
           />
           <SummaryCard
-            title="HIGH SEVERITY TODAY"
-            value="2"
-            subtitle="In portfolio"
-            icon={<Activity size={18} color="#c5221f" />}
+            title="PORTFOLIO VALUE ($)"
+            value={`$${(totalPortfolioValue / 1000000).toFixed(2)}M`}
+            subtitle="Total financial evaluation"
+            icon={<DollarSign size={18} color="#1e7e34" />}
           />
         </div>
 
-        {/* Visual Analytics Row: Stacked Bar Chart & Top Flagged Personnel matching Image 2 */}
+        {/* 100% Dynamic Analytics Visualizations */}
         <CollapsibleSection
           title="Analytical Visualizations"
-          subtitle="Alerts breakdown over last 7 days & top flagged entities"
+          subtitle="Priority distribution by category & top high-value entities"
           defaultOpen={true}
         >
           <div className={styles.grid2}>
             <ChartCard
-              title="Alerts, last 7 days"
-              subtitle="Daily threat and severity breakdown"
-              data={weeklyAlertsData}
+              title="Priority Breakdown by Financial Tier"
+              subtitle="Dynamic distribution across valuation tiers (<$25k to $75k+)"
+              data={financialTierPriorityData}
               dataKey="High"
-              categoryKey="day"
+              categoryKey="tier"
               type="bar"
               stackedKeys={stackedKeys}
             />
             <TopFlaggedCard
               records={records}
-              onSelectRecord={rec => setSelectedRecordForDrawer(rec)}
             />
           </div>
         </CollapsibleSection>
 
-        {/* Activity Stream Table matching Image 1 & Image 2 */}
+        {/* Stream Table */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <div>
-              <h2 className={styles.sectionTitle}>Recent alerts</h2>
+              <h2 className={styles.sectionTitle}>Master Record Stream</h2>
               <p className={styles.sectionSubtitle}>
                 Live stream of {records.length.toLocaleString()} system records
               </p>
             </div>
           </div>
 
+          {/* Bulk Action Bar */}
+          {selectedIds.size > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 16px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-lg)',
+                marginBottom: 16,
+                boxShadow: 'var(--shadow)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <CheckSquare size={18} color="var(--accent)" />
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
+                  {selectedIds.size} record{selectedIds.size > 1 ? 's' : ''} selected
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsBulkEditOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '6px 14px',
+                    borderRadius: 'var(--radius)',
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg-subtle)',
+                    color: 'var(--text)',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Edit3 size={14} /> Bulk Edit ({selectedIds.size})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsBulkDeleteConfirmOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '6px 14px',
+                    borderRadius: 'var(--radius)',
+                    border: '1px solid #f7c5c2',
+                    background: '#fce8e6',
+                    color: '#c5221f',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Trash2 size={14} /> Delete Selected ({selectedIds.size})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(new Set())}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius)',
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--text-muted)',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          )}
+
           <ResourceTable<SystemRecord>
             data={records}
             columns={columns}
             searchFields={['name', 'id', 'owner']}
-            searchPlaceholder="Search recent alerts..."
+            searchPlaceholder="Search system records..."
             filterGroups={filterGroups}
             pageSize={10}
             resourceName="Record"
@@ -254,7 +395,15 @@ export default function HomePage() {
         onSave={handleSaveEdit}
       />
 
-      {/* Confirm Delete Dialog */}
+      {/* Bulk Edit Modal */}
+      <BulkEditModal
+        open={isBulkEditOpen}
+        onClose={() => setIsBulkEditOpen(false)}
+        selectedCount={selectedIds.size}
+        onSave={handleExecuteBulkEdit}
+      />
+
+      {/* Confirm Delete Single Dialog */}
       <ConfirmDialog
         open={!!deletingRecord}
         onClose={() => setDeletingRecord(null)}
@@ -262,6 +411,17 @@ export default function HomePage() {
         title="Confirm Delete Record"
         description={`Are you sure you want to delete ${deletingRecord?.id}? This action will permanently remove it from the system.`}
         confirmText="Delete Record"
+        variant="danger"
+      />
+
+      {/* Confirm Bulk Delete Dialog */}
+      <ConfirmDialog
+        open={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={handleExecuteBulkDelete}
+        title="Confirm Batch Delete"
+        description={`Are you sure you want to delete all ${selectedIds.size} selected records? This action cannot be undone.`}
+        confirmText={`Delete ${selectedIds.size} Records`}
         variant="danger"
       />
     </PageShell>

@@ -73,7 +73,11 @@
 }
 
 .clickableRow:hover {
-  background: var(--row-selected, #edf4fc);
+  background: var(--row-hover, #edf4fc);
+}
+
+.clickableRow:hover td {
+  color: var(--text) !important;
 }
 
 .pagination {
