@@ -1,5 +1,5 @@
 .tableContainer {
-  background: var(--bg);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -73,7 +73,7 @@
 }
 
 .clickableRow:hover {
-  background: var(--surface-hover);
+  background: var(--row-selected, #edf4fc);
 }
 
 .pagination {

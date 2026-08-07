@@ -20,6 +20,12 @@ import {
 import { BarChart2, TableProperties } from 'lucide-react';
 import styles from './ChartCard.module.css';
 
+interface StackedKey {
+  key: string;
+  color: string;
+  label: string;
+}
+
 interface ChartProps {
   title: string;
   subtitle?: string;
@@ -27,10 +33,11 @@ interface ChartProps {
   dataKey: string;
   categoryKey?: string;
   type: 'line' | 'bar' | 'area' | 'pie';
+  stackedKeys?: StackedKey[];
   height?: number;
 }
 
-const MONO_SHADES = ['#0a0a0a', '#404040', '#737373', '#a3a3a3', '#d4d4d4'];
+const PASTEL_PALETTE = ['#c5221f', '#b06000', '#1e7e34', '#2563eb', '#7d786d'];
 
 export default function ChartCard({
   title,
@@ -39,9 +46,9 @@ export default function ChartCard({
   dataKey,
   categoryKey = 'name',
   type,
-  height = 260,
+  stackedKeys,
+  height = 240,
 }: ChartProps) {
-  // Challenge 4: chart vs table view toggle — users who prefer numbers over visuals can switch
   const [view, setView] = useState<'chart' | 'table'>('chart');
 
   return (
@@ -52,7 +59,7 @@ export default function ChartCard({
           {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
         </div>
 
-        {/* View toggle — key for Challenge 4 */}
+        {/* View toggle — Challenge 4 */}
         <div className={styles.viewToggle} role="group" aria-label="Switch view">
           <button
             className={`${styles.toggleBtn} ${view === 'chart' ? styles.active : ''}`}
@@ -101,8 +108,8 @@ export default function ChartCard({
         </div>
       ) : (
         /* ── Chart View ──────────────────────────────────────── */
-        <div style={{ width: '100%', height }}>
-          <ResponsiveContainer width="100%" height="100%">
+        <div style={{ width: '100%', height: height + (stackedKeys ? 30 : 0) }}>
+          <ResponsiveContainer width="100%" height={height}>
             {type === 'line' ? (
               <ReLineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -110,15 +117,34 @@ export default function ChartCard({
                 <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} />
                 <Tooltip
                   contentStyle={{
-                    background: 'var(--bg)',
+                    background: 'var(--surface)',
                     borderColor: 'var(--border)',
                     borderRadius: 'var(--radius)',
                     fontSize: '12px',
                     color: 'var(--text)',
                   }}
                 />
-                <Line type="monotone" dataKey={dataKey} stroke="var(--text)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey={dataKey} stroke="#c5221f" strokeWidth={2} dot={false} />
               </ReLineChart>
+            ) : type === 'bar' && stackedKeys ? (
+              /* Stacked Bar Chart matching Image 2 */
+              <ReBarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey={categoryKey} stroke="var(--text-muted)" fontSize={11} tickLine={false} />
+                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--surface)',
+                    borderColor: 'var(--border)',
+                    borderRadius: 'var(--radius)',
+                    fontSize: '12px',
+                    color: 'var(--text)',
+                  }}
+                />
+                {stackedKeys.map(s => (
+                  <Bar key={s.key} dataKey={s.key} stackId="a" fill={s.color} radius={[0, 0, 0, 0]} />
+                ))}
+              </ReBarChart>
             ) : type === 'bar' ? (
               <ReBarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -126,14 +152,14 @@ export default function ChartCard({
                 <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} />
                 <Tooltip
                   contentStyle={{
-                    background: 'var(--bg)',
+                    background: 'var(--surface)',
                     borderColor: 'var(--border)',
                     borderRadius: 'var(--radius)',
                     fontSize: '12px',
                     color: 'var(--text)',
                   }}
                 />
-                <Bar dataKey={dataKey} fill="var(--text)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={dataKey} fill="#b06000" radius={[4, 4, 0, 0]} />
               </ReBarChart>
             ) : type === 'area' ? (
               <ReAreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -142,14 +168,14 @@ export default function ChartCard({
                 <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} />
                 <Tooltip
                   contentStyle={{
-                    background: 'var(--bg)',
+                    background: 'var(--surface)',
                     borderColor: 'var(--border)',
                     borderRadius: 'var(--radius)',
                     fontSize: '12px',
                     color: 'var(--text)',
                   }}
                 />
-                <Area type="monotone" dataKey={dataKey} stroke="var(--text)" fill="var(--surface-hover)" strokeWidth={2} />
+                <Area type="monotone" dataKey={dataKey} stroke="#c5221f" fill="rgba(197, 34, 31, 0.1)" strokeWidth={2} />
               </ReAreaChart>
             ) : (
               <RePieChart>
@@ -161,15 +187,15 @@ export default function ChartCard({
                   cy="50%"
                   outerRadius={80}
                   innerRadius={50}
-                  paddingAngle={2}
+                  paddingAngle={3}
                 >
                   {data.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={MONO_SHADES[index % MONO_SHADES.length]} />
+                    <Cell key={`cell-${index}`} fill={PASTEL_PALETTE[index % PASTEL_PALETTE.length]} />
                   ))}
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    background: 'var(--bg)',
+                    background: 'var(--surface)',
                     borderColor: 'var(--border)',
                     borderRadius: 'var(--radius)',
                     fontSize: '12px',
@@ -179,6 +205,18 @@ export default function ChartCard({
               </RePieChart>
             )}
           </ResponsiveContainer>
+
+          {/* Stacked Chart Legend matching Image 2 */}
+          {type === 'bar' && stackedKeys && (
+            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
+              {stackedKeys.map(s => (
+                <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-muted)' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
+                  <span>{s.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

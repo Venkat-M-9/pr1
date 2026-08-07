@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 500;
@@ -12,11 +12,11 @@
   border: 1px solid transparent;
 }
 
-/* Status variant */
-.status.active   { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
-.status.inactive { background: #f5f5f5; color: #6b6b6b; border-color: #e5e5e5; }
-.status.pending  { background: #fefce8; color: #a16207; border-color: #fef08a; }
-.status.archived { background: #fafafa; color: #a0a0a0; border-color: #e0e0e0; }
+/* Status variant matching reference UI soft pastel pills */
+.status.active, .status.online   { background: #e6f4ea; color: #1e7e34; border-color: #ceebd6; }
+.status.inactive, .status.offline { background: #f1f3f4; color: #5f6368; border-color: #e0e0e0; }
+.status.pending, .status.acknowledged  { background: #feefc3; color: #b06000; border-color: #fce49d; }
+.status.archived, .status.open { background: #fce8e6; color: #c5221f; border-color: #f7c5c2; }
 
 [data-theme="dark"] .status.active   { background: #052e16; color: #86efac; border-color: #166534; }
 [data-theme="dark"] .status.inactive { background: #1a1a1a; color: #888888; border-color: #333333; }
@@ -24,10 +24,10 @@
 [data-theme="dark"] .status.archived { background: #141414; color: #555555; border-color: #262626; }
 
 /* Priority variant */
-.priority.low      { background: #f5f5f5; color: #6b6b6b; border-color: #e5e5e5; }
-.priority.medium   { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-.priority.high     { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
-.priority.critical { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.priority.low      { background: #f1f3f4; color: #5f6368; border-color: #e0e0e0; }
+.priority.medium   { background: #feefc3; color: #b06000; border-color: #fce49d; }
+.priority.high     { background: #fce8e6; color: #c5221f; border-color: #f7c5c2; }
+.priority.critical { background: #fce8e6; color: #c5221f; border-color: #f7c5c2; }
 
 [data-theme="dark"] .priority.low      { background: #1a1a1a; color: #888; border-color: #333; }
 [data-theme="dark"] .priority.medium   { background: #172554; color: #93c5fd; border-color: #1e3a8a; }

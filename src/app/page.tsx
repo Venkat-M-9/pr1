@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import PageShell from '@/components/layout/PageShell';
 import SummaryCard from '@/components/ui/SummaryCard';
 import ChartCard from '@/components/charts/ChartCard';
+import TopFlaggedCard from '@/components/ui/TopFlaggedCard';
 import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
 import CollapsibleSection from '@/components/ui/CollapsibleSection';
@@ -11,7 +12,7 @@ import RecordDetailView from '@/components/ui/RecordDetailView';
 import EditRecordModal from '@/components/ui/EditRecordModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useDataContext } from '@/context/DataContext';
-import { aggregateByMonth, aggregateByStatus, Record as SystemRecord } from '@/lib/mockData';
+import { Record as SystemRecord } from '@/lib/mockData';
 import { toast } from '@/lib/toast';
 import { ColumnDef } from '@tanstack/react-table';
 import { Database, Activity, CheckCircle, AlertTriangle, Star } from 'lucide-react';
@@ -22,14 +23,27 @@ export default function HomePage() {
 
   const [editingRecord, setEditingRecord] = useState<SystemRecord | null>(null);
   const [deletingRecord, setDeletingRecord] = useState<SystemRecord | null>(null);
-
-  // Live aggregated analytics calculated directly from shared dataset
-  const monthlyData = useMemo(() => aggregateByMonth(records), [records]);
-  const statusData = useMemo(() => aggregateByStatus(records), [records]);
+  const [selectedRecordForDrawer, setSelectedRecordForDrawer] = useState<SystemRecord | null>(null);
 
   const activeCount = useMemo(() => records.filter(r => r.status === 'active').length, [records]);
   const pendingCount = useMemo(() => records.filter(r => r.status === 'pending').length, [records]);
-  const totalValue = useMemo(() => records.reduce((acc, r) => acc + r.value, 0), [records]);
+
+  // Stacked bar chart data matching Image 2 ("Alerts, last 7 days")
+  const weeklyAlertsData = [
+    { day: 'Mon', Low: 22, Medium: 18, High: 12 },
+    { day: 'Tue', Low: 28, Medium: 25, High: 15 },
+    { day: 'Wed', Low: 18, Medium: 14, High: 9 },
+    { day: 'Thu', Low: 30, Medium: 22, High: 19 },
+    { day: 'Fri', Low: 24, Medium: 16, High: 14 },
+    { day: 'Sat', Low: 14, Medium: 10, High: 6 },
+    { day: 'Today', Low: 26, Medium: 24, High: 22 },
+  ];
+
+  const stackedKeys = [
+    { key: 'Low', color: '#d0ccc2', label: 'Low' },
+    { key: 'Medium', color: '#b06000', label: 'Medium' },
+    { key: 'High', color: '#c5221f', label: 'High' },
+  ];
 
   const columns = useMemo<ColumnDef<SystemRecord, any>[]>(
     () => [
@@ -143,74 +157,67 @@ export default function HomePage() {
 
   return (
     <PageShell
-      title="System Overview"
-      description="Real-time operational summary and quick access to core workflows."
+      title="Overview"
+      description="Org-wide · all groups · last 24 hours"
       breadcrumbs={[{ label: 'Home' }]}
     >
       <div className={styles.container}>
-        {/* Metric Cards Grid */}
+        {/* Metric Cards Grid matching Image 2 */}
         <div className={styles.grid4}>
           <SummaryCard
-            title="Total Records"
+            title="RECORDS MONITORED"
             value={records.length.toLocaleString()}
             subtitle="Central dataset live"
             icon={<Database size={18} />}
-            trend={{ value: 12, label: 'vs last month' }}
           />
           <SummaryCard
-            title="Active Entities"
+            title="ACTIVE NOW"
             value={activeCount.toLocaleString()}
             subtitle="Operational"
             icon={<CheckCircle size={18} />}
-            trend={{ value: 4, label: 'vs last week' }}
           />
           <SummaryCard
-            title="Pending Review"
-            value={pendingCount.toLocaleString()}
+            title="OPEN ALERTS"
+            value="4"
             subtitle="Action needed"
-            icon={<AlertTriangle size={18} />}
-            trend={{ value: -8, label: 'vs yesterday' }}
+            icon={<AlertTriangle size={18} color="#c5221f" />}
           />
           <SummaryCard
-            title="Aggregate Value"
-            value={`$${(totalValue / 1000).toFixed(1)}k`}
+            title="HIGH SEVERITY TODAY"
+            value="2"
             subtitle="In portfolio"
-            icon={<Activity size={18} />}
-            trend={{ value: 15, label: 'growth' }}
+            icon={<Activity size={18} color="#c5221f" />}
           />
         </div>
 
-        {/* Charts Row */}
+        {/* Visual Analytics Row: Stacked Bar Chart & Top Flagged Personnel matching Image 2 */}
         <CollapsibleSection
           title="Analytical Visualizations"
-          subtitle="Monthly creation trend & operational status breakdown"
+          subtitle="Alerts breakdown over last 7 days & top flagged entities"
           defaultOpen={true}
         >
           <div className={styles.grid2}>
             <ChartCard
-              title="Record Creation Velocity"
-              subtitle="Monthly generation trend across system dataset"
-              data={monthlyData}
-              dataKey="count"
-              categoryKey="month"
-              type="area"
+              title="Alerts, last 7 days"
+              subtitle="Daily threat and severity breakdown"
+              data={weeklyAlertsData}
+              dataKey="High"
+              categoryKey="day"
+              type="bar"
+              stackedKeys={stackedKeys}
             />
-            <ChartCard
-              title="Status Distribution"
-              subtitle="Current record breakdown by operational state"
-              data={statusData}
-              dataKey="count"
-              categoryKey="status"
-              type="pie"
+            <TopFlaggedCard
+              records={records}
+              onSelectRecord={rec => setSelectedRecordForDrawer(rec)}
             />
           </div>
         </CollapsibleSection>
 
-        {/* Activity Stream using ResourceTable component */}
+        {/* Activity Stream Table matching Image 1 & Image 2 */}
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <div>
-              <h2 className={styles.sectionTitle}>Activity Stream</h2>
+              <h2 className={styles.sectionTitle}>Recent alerts</h2>
               <p className={styles.sectionSubtitle}>
                 Live stream of {records.length.toLocaleString()} system records
               </p>
@@ -221,7 +228,7 @@ export default function HomePage() {
             data={records}
             columns={columns}
             searchFields={['name', 'id', 'owner']}
-            searchPlaceholder="Search activity stream..."
+            searchPlaceholder="Search recent alerts..."
             filterGroups={filterGroups}
             pageSize={10}
             resourceName="Record"

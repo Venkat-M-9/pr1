@@ -19,6 +19,7 @@ export { default as ImportModal } from './ui/ImportModal';
 export { default as LoadingSkeleton } from './ui/LoadingSkeleton';
 export { default as EditRecordModal } from './ui/EditRecordModal';
 export { default as RecordDetailView } from './ui/RecordDetailView';
+export { default as TopFlaggedCard } from './ui/TopFlaggedCard';
 export { default as Modal } from './ui/Modal';
 export { default as StatusBadge } from './ui/StatusBadge';
 export { default as SummaryCard } from './ui/SummaryCard';
