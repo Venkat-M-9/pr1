@@ -25,7 +25,6 @@ export default function TopBar({ title, onMobileMenuToggle }: Props) {
             <Menu size={18} />
           </button>
         )}
-        <span className={styles.pageTitle}>{title || 'Overview'}</span>
       </div>
 
       <div className={styles.right}>
