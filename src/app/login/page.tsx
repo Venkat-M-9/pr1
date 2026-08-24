@@ -23,7 +23,7 @@ export default function LoginPage() {
       toast({
         title: 'Authentication Failed',
         description: error.message,
-        type: 'danger',
+        type: 'error',
       });
       setLoading(false);
     }
