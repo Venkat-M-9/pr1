@@ -2,22 +2,31 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sliders, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Sliders, LogIn, ArrowRight } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('admin.user@enterprise.internal');
-  const [password, setPassword] = useState('••••••••••••');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: 'Authentication Successful',
-      description: 'Welcome back, Admin User.',
-      type: 'success',
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-    router.push('/');
+
+    if (error) {
+      toast({
+        title: 'Authentication Failed',
+        description: error.message,
+        type: 'danger',
+      });
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,7 +45,7 @@ export default function LoginPage() {
           maxWidth: 400,
           width: '100%',
           padding: 32,
-          background: 'var(--bg)',
+          background: 'var(--surface)',
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-xl)',
           boxShadow: 'var(--shadow-lg)',
@@ -67,77 +76,31 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
-              Work Email
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={16} style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-muted)' }} />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px 8px 36px',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)',
-                  fontSize: 13,
-                  color: 'var(--text)',
-                }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={16} style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-muted)' }} />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px 8px 36px',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)',
-                  fontSize: 13,
-                  color: 'var(--text)',
-                }}
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            style={{
-              marginTop: 8,
-              width: '100%',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '10px 16px',
-              background: 'var(--accent)',
-              color: 'var(--accent-fg)',
-              border: 'none',
-              borderRadius: 'var(--radius)',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
-          >
-            Sign In <ArrowRight size={16} />
-          </button>
-        </form>
+        <button
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          style={{
+            marginTop: 8,
+            width: '100%',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            padding: '12px 16px',
+            background: 'var(--surface)',
+            color: 'var(--text)',
+            border: '1px solid var(--border-strong)',
+            borderRadius: 'var(--radius)',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            transition: 'background var(--transition)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'var(--surface)')}
+        >
+          {loading ? 'Redirecting...' : 'Sign In with Google'}
+        </button>
       </div>
     </div>
   );
