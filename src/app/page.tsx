@@ -31,22 +31,22 @@ export default function HomePage() {
   // 100% Dynamic Metrics calculated directly from DataContext system records
   const activeCount = useMemo(() => records.filter(r => r.status === 'active').length, [records]);
   const highPriorityCount = useMemo(() => records.filter(r => r.priority === 'critical' || r.priority === 'high').length, [records]);
-  const totalPortfolioValue = useMemo(() => records.reduce((acc, r) => acc + r.value, 0), [records]);
+  const avgRiskScore = useMemo(() => Math.round(records.reduce((acc, r) => acc + r.value, 0) / (records.length || 1)), [records]);
 
-  // 100% Dynamic Priority Breakdown by Financial Value Tier for the Stacked Bar Chart
-  const financialTierPriorityData = useMemo(() => {
+  // 100% Dynamic Priority Breakdown by Risk Score Tier for the Stacked Bar Chart
+  const riskTierPriorityData = useMemo(() => {
     const tiers: Record<string, { tier: string; Low: number; Medium: number; High: number; Critical: number }> = {
-      low: { tier: '< $25k', Low: 0, Medium: 0, High: 0, Critical: 0 },
-      medium: { tier: '$25k - $50k', Low: 0, Medium: 0, High: 0, Critical: 0 },
-      high: { tier: '$50k - $75k', Low: 0, Medium: 0, High: 0, Critical: 0 },
-      critical: { tier: '$75k+', Low: 0, Medium: 0, High: 0, Critical: 0 },
+      low: { tier: 'Low (< 25)', Low: 0, Medium: 0, High: 0, Critical: 0 },
+      medium: { tier: 'Medium (25-49)', Low: 0, Medium: 0, High: 0, Critical: 0 },
+      high: { tier: 'High (50-74)', Low: 0, Medium: 0, High: 0, Critical: 0 },
+      critical: { tier: 'Critical (75+)', Low: 0, Medium: 0, High: 0, Critical: 0 },
     };
 
     records.forEach(r => {
       let tierKey = 'low';
-      if (r.value >= 75000) tierKey = 'critical';
-      else if (r.value >= 50000) tierKey = 'high';
-      else if (r.value >= 25000) tierKey = 'medium';
+      if (r.value >= 75) tierKey = 'critical';
+      else if (r.value >= 50) tierKey = 'high';
+      else if (r.value >= 25) tierKey = 'medium';
 
       if (r.priority === 'low') tiers[tierKey].Low++;
       else if (r.priority === 'medium') tiers[tierKey].Medium++;
@@ -58,10 +58,10 @@ export default function HomePage() {
   }, [records]);
 
   const stackedKeys = [
-    { key: 'Low', color: '#a09b8f', label: 'Low (<$25k)' },
-    { key: 'Medium', color: '#b06000', label: 'Medium ($25k-$50k)' },
-    { key: 'High', color: '#2563eb', label: 'High ($50k-$75k)' },
-    { key: 'Critical', color: '#c5221f', label: 'Critical ($75k+)' },
+    { key: 'Low', color: '#2563eb', label: 'Low (< 25)' },
+    { key: 'Medium', color: '#eab308', label: 'Medium (25-49)' },
+    { key: 'High', color: '#ea580c', label: 'High (50-74)' },
+    { key: 'Critical', color: '#dc3545', label: 'Critical (75+)' },
   ];
 
   const toggleSelectRow = (id: string) => {
@@ -96,7 +96,7 @@ export default function HomePage() {
               type="checkbox"
               checked={isAllSelected}
               onChange={() => toggleSelectAllVisible(currentRows)}
-              title="Select all visible records"
+              title="Select all visible assets"
               style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--accent)' }}
             />
           );
@@ -112,29 +112,33 @@ export default function HomePage() {
                 e.stopPropagation();
                 toggleSelectRow(info.row.original.id);
               }}
-              title="Select record"
+              title="Select asset"
               style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--accent)' }}
             />
           );
         },
       },
-      { accessorKey: 'id', header: 'ID', size: 90 },
-      { accessorKey: 'name', header: 'Record Name', size: 160 },
+      { accessorKey: 'id', header: 'Asset ID', size: 100 },
+      { accessorKey: 'name', header: 'Asset / Target Name', size: 220 },
       {
         accessorKey: 'status',
-        header: 'Status',
+        header: 'Monitoring Status',
         cell: info => <StatusBadge value={info.getValue()} variant="status" />,
       },
       {
         accessorKey: 'priority',
-        header: 'Priority',
+        header: 'Threat Severity',
         cell: info => <StatusBadge value={info.getValue()} variant="priority" />,
       },
-      { accessorKey: 'owner', header: 'Owner' },
+      { accessorKey: 'owner', header: 'SecOps Lead' },
       {
         accessorKey: 'value',
-        header: 'Value ($)',
-        cell: info => `$${info.getValue().toLocaleString()}`,
+        header: 'Risk Score',
+        cell: info => {
+          const val = Number(info.getValue());
+          const color = val >= 75 ? '#dc3545' : val >= 50 ? '#ea580c' : '#2563eb';
+          return <span style={{ fontWeight: 700, color }}>{val} / 100</span>;
+        },
       },
     ],
     [selectedIds, records]
@@ -143,47 +147,47 @@ export default function HomePage() {
   const filterGroups = [
     {
       id: 'starred',
-      label: 'Starred',
+      label: 'Watchlist',
       options: [
-        { label: 'Starred Only', value: 'true' },
-        { label: 'Unstarred Only', value: 'false' },
+        { label: 'Watchlist Only', value: 'true' },
+        { label: 'Unflagged Only', value: 'false' },
       ],
     },
     {
       id: 'status',
       label: 'Status',
       options: [
-        { label: 'Active', value: 'active' },
-        { label: 'Inactive', value: 'inactive' },
-        { label: 'Pending', value: 'pending' },
+        { label: 'Active Monitoring', value: 'active' },
+        { label: 'Inactive / Offline', value: 'inactive' },
+        { label: 'Remediation Pending', value: 'pending' },
         { label: 'Archived', value: 'archived' },
       ],
     },
     {
       id: 'priority',
-      label: 'Priority',
+      label: 'Threat Severity',
       options: [
-        { label: 'Low', value: 'low' },
-        { label: 'Medium', value: 'medium' },
-        { label: 'High', value: 'high' },
-        { label: 'Critical', value: 'critical' },
+        { label: 'Low (< 25)', value: 'low' },
+        { label: 'Medium (25-49)', value: 'medium' },
+        { label: 'High (50-74)', value: 'high' },
+        { label: 'Critical (75+)', value: 'critical' },
       ],
     },
   ];
 
   const handleSaveEdit = (updatedRecord: SystemRecord) => {
     updateRecord(updatedRecord);
-    toast.crud('update', 'Record Updated', `${updatedRecord.id} (${updatedRecord.name}) saved successfully.`);
+    toast.crud('update', 'Asset Updated', `${updatedRecord.id} (${updatedRecord.name}) saved successfully.`);
   };
 
   const handleConfirmDelete = () => {
     if (!deletingRecord) return;
     const deleted = deletingRecord;
     deleteRecord(deleted.id);
-    toast.crud('delete', 'Record Deleted', `${deleted.id} (${deleted.name}) was deleted.`, {
+    toast.crud('delete', 'Asset Decommissioned', `${deleted.id} (${deleted.name}) was removed.`, {
       undo: () => {
         addRecord(deleted);
-        toast.crud('create', 'Record Restored', `${deleted.id} was successfully restored.`);
+        toast.crud('create', 'Asset Restored', `${deleted.id} was successfully restored.`);
       },
     });
     setDeletingRecord(null);
@@ -193,10 +197,10 @@ export default function HomePage() {
     const ids = Array.from(selectedIds);
     const deletedList = records.filter(r => selectedIds.has(r.id));
     deleteRecords(ids);
-    toast.crud('bulk_delete', 'Batch Delete Complete', `Successfully deleted ${ids.length} records.`, {
+    toast.crud('bulk_delete', 'Batch Decommission Complete', `Successfully removed ${ids.length} assets.`, {
       undo: () => {
         importRecords(deletedList);
-        toast.crud('import', 'Batch Restore Complete', `Restored ${deletedList.length} records.`);
+        toast.crud('import', 'Batch Restore Complete', `Restored ${deletedList.length} assets.`);
       },
     });
     setSelectedIds(new Set());
@@ -206,7 +210,7 @@ export default function HomePage() {
   const handleExecuteBulkEdit = (updates: { status?: Status; priority?: Priority }) => {
     const ids = Array.from(selectedIds);
     updateRecords(ids, updates);
-    toast.crud('bulk_edit', 'Batch Edit Complete', `Updated ${ids.length} selected records.`);
+    toast.crud('bulk_edit', 'Batch Status Updated', `Updated ${ids.length} selected assets.`);
     setSelectedIds(new Set());
     setIsBulkEditOpen(false);
   };
@@ -215,55 +219,55 @@ export default function HomePage() {
     const rec = records.find(r => r.id === id);
     const willStar = !rec?.starred;
     toggleStarRecord(id);
-    toast.crud('star', willStar ? 'Record Starred' : 'Removed from Starred', `${id} (${rec?.name || 'Record'}) was ${willStar ? 'added to favorites' : 'unfavorited'}.`);
+    toast.crud('star', willStar ? 'Added to Watchlist' : 'Removed from Watchlist', `${id} (${rec?.name || 'Asset'}) was ${willStar ? 'flagged for priority monitoring' : 'removed from watchlist'}.`);
   };
 
   return (
     <PageShell
-      title="Overview"
-      description="Live operational summary & real-time analytics"
+      title="Security Operations Overview"
+      description="SOC command center with live asset telemetry, threat risk breakdowns, and incident readiness metrics."
       breadcrumbs={[{ label: 'Home' }]}
     >
       <div className={styles.container}>
         {/* Metric Cards Grid - 100% Dynamic from DataContext */}
         <div className={styles.grid4}>
           <SummaryCard
-            title="RECORDS MONITORED"
+            title="TOTAL MONITORED ASSETS"
             value={records.length.toLocaleString()}
-            subtitle="Central dataset live"
+            subtitle="Central telemetry live"
             icon={<Database size={18} />}
           />
           <SummaryCard
-            title="ACTIVE NOW"
+            title="ACTIVE MONITORED ENDPOINTS"
             value={activeCount.toLocaleString()}
-            subtitle="Operational items"
-            icon={<CheckCircle size={18} />}
+            subtitle="Operational infrastructure"
+            icon={<CheckCircle size={18} color="var(--success)" />}
           />
           <SummaryCard
-            title="HIGH / CRITICAL ITEMS"
+            title="HIGH &amp; CRITICAL RISKS"
             value={highPriorityCount.toLocaleString()}
-            subtitle="Priority review"
-            icon={<AlertTriangle size={18} color="#c5221f" />}
+            subtitle="Immediate patching priority"
+            icon={<AlertTriangle size={18} color="#dc3545" />}
           />
           <SummaryCard
-            title="PORTFOLIO VALUE ($)"
-            value={`$${(totalPortfolioValue / 1000000).toFixed(2)}M`}
-            subtitle="Total financial evaluation"
-            icon={<DollarSign size={18} color="#1e7e34" />}
+            title="MEAN ASSET RISK SCORE"
+            value={`${avgRiskScore} / 100`}
+            subtitle="Composite exposure index"
+            icon={<Activity size={18} color="#ea580c" />}
           />
         </div>
 
         {/* 100% Dynamic Analytics Visualizations */}
         <CollapsibleSection
-          title="Analytical Visualizations"
-          subtitle="Priority distribution by category & top high-value entities"
+          title="Analytical Threat Visualizations"
+          subtitle="Severity distribution across risk scoring tiers and high-exposure infrastructure"
           defaultOpen={true}
         >
           <div className={styles.grid2}>
             <ChartCard
-              title="Priority Breakdown by Financial Tier"
-              subtitle="Dynamic distribution across valuation tiers (<$25k to $75k+)"
-              data={financialTierPriorityData}
+              title="Threat Severity by Risk Tier"
+              subtitle="Dynamic distribution across risk tiers (Low <25 to Critical 75+)"
+              data={riskTierPriorityData}
               dataKey="High"
               categoryKey="tier"
               type="bar"

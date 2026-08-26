@@ -15,28 +15,28 @@ const STATUSES: Status[] = ['active', 'inactive', 'pending', 'archived'];
 export default function CreateRecordModal({ open, onClose, onCreate }: Props) {
   const [name, setName] = useState('');
   const [status, setStatus] = useState<Status>('active');
-  const [owner, setOwner] = useState('System Admin');
-  const [value, setValue] = useState<number>(45000);
+  const [owner, setOwner] = useState('Sarah Connor (SOC Lead)');
+  const [value, setValue] = useState<number>(65);
   const [description, setDescription] = useState('');
 
   const currentPriority = getPriorityFromValue(value);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const numVal = Number(value) || 0;
+    const numVal = Math.min(100, Math.max(0, Number(value) || 0));
     const today = new Date().toISOString().split('T')[0];
-    const newId = `REC-${Math.floor(Math.random() * 90000 + 10000)}`;
+    const newId = `AST-${Math.floor(Math.random() * 90000 + 10000)}`;
 
     const newRecord: SystemRecord = {
       id: newId,
-      name: name || 'Untitled Record',
+      name: name || 'Untitled Asset',
       status,
       priority: getPriorityFromValue(numVal),
-      owner: owner || 'System Admin',
+      owner: owner || 'Sarah Connor (SOC Lead)',
       value: numVal,
       progress: Math.floor(Math.random() * 100),
-      tags: ['Manual Entry'],
-      description: description || 'Directly created in Data Manager.',
+      tags: ['Manual Entry', 'Monitored Asset'],
+      description: description || 'Directly registered in SOC Asset Manager.',
       createdAt: today,
       updatedAt: today,
       starred: false,
@@ -45,7 +45,7 @@ export default function CreateRecordModal({ open, onClose, onCreate }: Props) {
     onCreate(newRecord);
     // Reset form
     setName('');
-    setValue(45000);
+    setValue(65);
     setDescription('');
     onClose();
   };
@@ -72,7 +72,7 @@ export default function CreateRecordModal({ open, onClose, onCreate }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Create New Record"
+      title="Register Monitored Asset"
       size="md"
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -105,18 +105,18 @@ export default function CreateRecordModal({ open, onClose, onCreate }: Props) {
               cursor: 'pointer',
             }}
           >
-            Create Record
+            Register Asset
           </button>
         </div>
       }
     >
       <form id="create-record-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
-          <label style={labelStyle}>Record Title / Name *</label>
+          <label style={labelStyle}>Asset / Infrastructure Name *</label>
           <input
             type="text"
             required
-            placeholder="e.g. Enterprise Cloud Migration Phase 2"
+            placeholder="e.g. Core PostgreSQL DB Cluster #104"
             value={name}
             onChange={e => setName(e.target.value)}
             style={inputStyle}
@@ -125,7 +125,7 @@ export default function CreateRecordModal({ open, onClose, onCreate }: Props) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={labelStyle}>Status</label>
+            <label style={labelStyle}>Monitoring Status</label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value as Status)}
@@ -133,14 +133,14 @@ export default function CreateRecordModal({ open, onClose, onCreate }: Props) {
             >
               {STATUSES.map(s => (
                 <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {s === 'active' ? 'Active Monitoring' : s === 'inactive' ? 'Offline' : s === 'pending' ? 'Remediation Pending' : 'Archived'}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label style={labelStyle}>Owner</label>
+            <label style={labelStyle}>SecOps Lead / Owner</label>
             <input
               type="text"
               required
@@ -152,25 +152,25 @@ export default function CreateRecordModal({ open, onClose, onCreate }: Props) {
         </div>
 
         <div>
-          <label style={labelStyle}>Financial Value ($)</label>
+          <label style={labelStyle}>Threat Risk Score (0 - 100)</label>
           <input
             type="number"
-            step="any"
             min="0"
+            max="100"
             value={value}
-            onChange={e => setValue(parseFloat(e.target.value) || 0)}
+            onChange={e => setValue(parseInt(e.target.value) || 0)}
             style={inputStyle}
           />
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-            Auto-assigned Priority: <strong style={{ textTransform: 'capitalize' }}>{currentPriority}</strong> (Critical: $75k+, High: $50k+, Medium: $25k+, Low: &lt;$25k)
+            Threat Severity: <strong style={{ textTransform: 'capitalize', color: currentPriority === 'critical' ? '#dc3545' : currentPriority === 'high' ? '#ea580c' : '#2563eb' }}>{currentPriority}</strong> (Critical: 75+, High: 50-74, Medium: 25-49, Low: &lt;25)
           </p>
         </div>
 
         <div>
-          <label style={labelStyle}>Description</label>
+          <label style={labelStyle}>Security Description &amp; Scope</label>
           <textarea
             rows={3}
-            placeholder="Provide context or summary for this item..."
+            placeholder="Provide infrastructure details, subnet, and known CVE exposures..."
             value={description}
             onChange={e => setDescription(e.target.value)}
             style={{ ...inputStyle, resize: 'vertical' }}

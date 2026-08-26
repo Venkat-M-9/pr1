@@ -71,7 +71,7 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
     <Modal
       open={open}
       onClose={onClose}
-      title={`Edit Record ${record.id}`}
+      title={`Edit Security Asset ${record.id}`}
       size="md"
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -104,14 +104,14 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
               cursor: 'pointer',
             }}
           >
-            Save Changes
+            Save Asset Changes
           </button>
         </div>
       }
     >
       <form id="edit-record-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div>
-          <label style={labelStyle}>Record Title / Name</label>
+          <label style={labelStyle}>Asset / Infrastructure Name</label>
           <input
             type="text"
             required
@@ -123,7 +123,7 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={labelStyle}>Status</label>
+            <label style={labelStyle}>Monitoring Status</label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value as Status)}
@@ -131,14 +131,14 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
             >
               {STATUSES.map(s => (
                 <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {s === 'active' ? 'Active Monitoring' : s === 'inactive' ? 'Offline' : s === 'pending' ? 'Remediation Pending' : 'Archived'}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label style={labelStyle}>Owner</label>
+            <label style={labelStyle}>SecOps Lead / Owner</label>
             <input
               type="text"
               required
@@ -150,22 +150,22 @@ export default function EditRecordModal({ open, onClose, record, onSave }: Props
         </div>
 
         <div>
-          <label style={labelStyle}>Financial Value ($)</label>
+          <label style={labelStyle}>Threat Risk Score (0 - 100)</label>
           <input
             type="number"
-            step="any"
             min="0"
+            max="100"
             value={value}
-            onChange={e => setValue(parseFloat(e.target.value) || 0)}
+            onChange={e => setValue(parseInt(e.target.value) || 0)}
             style={inputStyle}
           />
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-            Auto-assigned Priority: <strong style={{ textTransform: 'capitalize' }}>{currentPriority}</strong> (Critical: $75k+, High: $50k+, Medium: $25k+, Low: &lt;$25k)
+            Threat Severity: <strong style={{ textTransform: 'capitalize', color: currentPriority === 'critical' ? '#dc3545' : currentPriority === 'high' ? '#ea580c' : '#2563eb' }}>{currentPriority}</strong> (Critical: 75+, High: 50-74, Medium: 25-49, Low: &lt;25)
           </p>
         </div>
 
         <div>
-          <label style={labelStyle}>Description</label>
+          <label style={labelStyle}>Security Description &amp; Scope</label>
           <textarea
             rows={3}
             value={description}

@@ -19,57 +19,63 @@ export default function ReportsPage() {
 
   const columns = useMemo<ColumnDef<Entry, any>[]>(
     () => [
-      { accessorKey: 'id', header: 'Entry ID', size: 90 },
-      { accessorKey: 'reference', header: 'Reference', size: 120 },
-      { accessorKey: 'title', header: 'Report Item Title', size: 180 },
-      { accessorKey: 'type', header: 'Type' },
+      { accessorKey: 'id', header: 'Log ID', size: 95 },
+      { accessorKey: 'reference', header: 'CVE / Signature Ref', size: 140 },
+      { accessorKey: 'title', header: 'Security Telemetry Alert', size: 240 },
+      { accessorKey: 'type', header: 'Detection Type' },
       {
         accessorKey: 'status',
         header: 'Status',
         cell: info => <StatusBadge value={info.getValue()} variant="status" />,
       },
-      { accessorKey: 'date', header: 'Date' },
+      { accessorKey: 'currency', header: 'Sensor' },
+      { accessorKey: 'date', header: 'Detection Date' },
       {
         accessorKey: 'amount',
-        header: 'Amount',
-        cell: info => `${info.row.original.currency} $${info.getValue().toLocaleString()}`,
+        header: 'Severity Score',
+        cell: info => {
+          const val = Number(info.getValue());
+          const color = val >= 75 ? '#dc3545' : val >= 50 ? '#ea580c' : '#2563eb';
+          return <span style={{ fontWeight: 700, color }}>{val} / 100</span>;
+        },
       },
     ],
     []
   );
 
   const entryImportSchema: FieldSchema<Entry>[] = [
-    { key: 'id', label: 'Entry ID', defaultValue: `ENT-${Math.floor(Math.random() * 90000 + 10000)}` },
-    { key: 'reference', label: 'Reference', defaultValue: `REF-${Math.floor(Math.random() * 900000 + 100000)}` },
-    { key: 'title', label: 'Title', defaultValue: 'New Financial Entry' },
-    { key: 'type', label: 'Type', defaultValue: 'invoice' },
+    { key: 'id', label: 'Log ID', defaultValue: `LOG-${Math.floor(Math.random() * 90000 + 10000)}` },
+    { key: 'reference', label: 'CVE / Signature', defaultValue: `CVE-2024-${Math.floor(Math.random() * 8999 + 1000)}` },
+    { key: 'title', label: 'Alert Title', defaultValue: 'New Sensor Telemetry Log' },
+    { key: 'type', label: 'Detection Type', defaultValue: 'WAF Block' },
     { key: 'status', label: 'Status', defaultValue: 'active' },
-    { key: 'currency', label: 'Currency', defaultValue: 'USD' },
-    { key: 'amount', label: 'Amount', type: 'number', defaultValue: 500 },
+    { key: 'currency', label: 'Sensor', defaultValue: 'SIEM' },
+    { key: 'amount', label: 'Severity Score (0-100)', type: 'number', defaultValue: 70 },
     { key: 'date', label: 'Date', defaultValue: new Date().toISOString().split('T')[0] },
-    { key: 'notes', label: 'Notes', defaultValue: 'Imported via report manager.' },
+    { key: 'notes', label: 'Notes', defaultValue: 'Imported security sensor log.' },
   ];
 
   const filterGroups = [
     {
       id: 'type',
-      label: 'Type',
+      label: 'Detection Type',
       options: [
-        { label: 'Invoice', value: 'invoice' },
-        { label: 'Receipt', value: 'receipt' },
-        { label: 'Credit', value: 'credit' },
-        { label: 'Debit', value: 'debit' },
-        { label: 'Transfer', value: 'transfer' },
+        { label: 'WAF Block', value: 'WAF Block' },
+        { label: 'EDR Detection', value: 'EDR Detection' },
+        { label: 'Auth Anomaly', value: 'Auth Anomaly' },
+        { label: 'Port Scan Drop', value: 'Port Scan Drop' },
+        { label: 'DDoS Mitigation', value: 'DDoS Mitigation' },
+        { label: 'Malware Quarantine', value: 'Malware Quarantine' },
       ],
     },
     {
       id: 'status',
       label: 'Status',
       options: [
-        { label: 'Active', value: 'active' },
-        { label: 'Inactive', value: 'inactive' },
-        { label: 'Pending', value: 'pending' },
-        { label: 'Archived', value: 'archived' },
+        { label: 'Active Monitoring', value: 'active' },
+        { label: 'Inactive / Closed', value: 'inactive' },
+        { label: 'Investigating', value: 'pending' },
+        { label: 'Resolved / Archived', value: 'archived' },
       ],
     },
   ];
@@ -77,25 +83,25 @@ export default function ReportsPage() {
   const handleGenerateCustom = (e: React.FormEvent) => {
     e.preventDefault();
     setIsModalOpen(false);
-    toast.crud('export', 'Report Generated', `Custom statement report "${reportTitle || 'Untitled Report'}" built successfully.`);
+    toast.crud('export', 'SOC Report Generated', `Security telemetry statement "${reportTitle || 'SOC Threat Brief'}" exported successfully.`);
     setReportTitle('');
   };
 
   return (
     <PageShell
-      title="Financial & Audit Reports"
-      description="Filterable statement reports with instant export and report builder."
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Reports' }]}
+      title="SOC Incident & Audit Telemetry Reports"
+      description="Sensor cluster telemetry, firewall drop logs, MITRE technique references, and automated threat report exporter."
+      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Audit Reports' }]}
     >
       <div>
         <ResourceTable<Entry>
           data={entries}
           columns={columns}
           searchFields={['title', 'reference', 'id', 'notes']}
-          searchPlaceholder="Search reference or title..."
+          searchPlaceholder="Search CVE, log ID, or alert..."
           filterGroups={filterGroups}
           pageSize={15}
-          resourceName="Financial Entry"
+          resourceName="Telemetry Log"
           exportable={true}
           importable={true}
           importSchema={entryImportSchema}

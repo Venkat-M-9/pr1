@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Database,
+  ShieldAlert,
+  Server,
   BarChart3,
   FileText,
   User,
@@ -12,17 +12,17 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Sliders,
+  Shield,
   X,
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
-  { label: 'Home', href: '/', icon: LayoutDashboard },
-  { label: 'Data Management', href: '/data', icon: Database },
-  { label: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { label: 'Reports', href: '/reports', icon: FileText },
-  { label: 'User Profile', href: '/profile', icon: User },
+  { label: 'SOC Overview', href: '/', icon: ShieldAlert },
+  { label: 'Asset Management', href: '/data', icon: Server },
+  { label: 'Threat Analytics', href: '/analytics', icon: BarChart3 },
+  { label: 'Audit Reports', href: '/reports', icon: FileText },
+  { label: 'SecOps Profile', href: '/profile', icon: User },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -50,9 +50,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <div className={styles.header}>
           <div className={styles.logo}>
             <div className={styles.logoIcon}>
-              <Sliders size={18} />
+              <Shield size={18} />
             </div>
-            {(!collapsed || mobileOpen) && <span className={styles.brand}>System Console</span>}
+            {(!collapsed || mobileOpen) && <span className={styles.brand}>CyberSOC</span>}
           </div>
           <button className={styles.toggleBtn} onClick={onToggle} aria-label="Toggle navigation">
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}

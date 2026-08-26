@@ -9,17 +9,17 @@ interface Props {
 }
 
 export default function TopFlaggedCard({ records, onSelectRecord }: Props) {
-  // Sort 100% dynamically by highest dollar value ($) to get top 4 highest impact records
+  // Sort dynamically by highest risk score to get top 4 highest exposure assets
   const topRecords = useMemo(() => {
     return [...records]
       .sort((a, b) => b.value - a.value)
       .slice(0, 4);
   }, [records]);
 
-  const getScoreColor = (priority: string, idx: number) => {
-    if (priority === 'critical' || idx === 0) return { bg: '#fce8e6', text: '#c5221f', border: '#f7c5c2' };
-    if (priority === 'high' || idx <= 2) return { bg: '#feefc3', text: '#b06000', border: '#fce49d' };
-    return { bg: '#edf4fc', text: '#2563eb', border: '#b8d5fb' };
+  const getScoreColor = (priority: string, score: number) => {
+    if (priority === 'critical' || score >= 75) return { bg: 'rgba(220, 53, 69, 0.12)', text: '#dc3545', border: 'rgba(220, 53, 69, 0.25)' };
+    if (priority === 'high' || score >= 50) return { bg: 'rgba(234, 88, 12, 0.12)', text: '#ea580c', border: 'rgba(234, 88, 12, 0.25)' };
+    return { bg: 'rgba(37, 99, 235, 0.12)', text: '#2563eb', border: 'rgba(37, 99, 235, 0.25)' };
   };
 
   return (
@@ -35,17 +35,16 @@ export default function TopFlaggedCard({ records, onSelectRecord }: Props) {
       }}
     >
       <div>
-        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Top Flagged Records</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>Top High-Risk Crown Jewels</h3>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-          Highest valuation entities requiring attention
+          Critical infrastructure ranked by composite threat exposure index
         </p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {topRecords.map((item, idx) => {
-          // Dynamic financial risk score derived directly from dollar value
-          const score = Math.min(99, Math.max(15, Math.round((item.value / 150000) * 100)));
-          const color = getScoreColor(item.priority, idx);
+        {topRecords.map((item) => {
+          const score = item.value;
+          const color = getScoreColor(item.priority, score);
           return (
             <div
               key={item.id}
@@ -86,7 +85,7 @@ export default function TopFlaggedCard({ records, onSelectRecord }: Props) {
                   {item.id} · {item.name}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {item.owner} · <strong style={{ color: 'var(--text)' }}>${item.value.toLocaleString()}</strong> ({item.priority.toUpperCase()})
+                  {item.owner} · <strong style={{ color: color.text }}>Risk: {item.value}/100</strong> ({item.priority.toUpperCase()})
                 </div>
               </div>
             </div>

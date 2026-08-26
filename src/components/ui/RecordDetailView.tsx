@@ -13,30 +13,30 @@ interface Props {
 }
 
 export default function RecordDetailView({ record, onToggleStar, onEdit, onDelete }: Props) {
-  const [activeTab, setActiveTab] = useState<'audit' | 'financial' | 'raw'>('audit');
+  const [activeTab, setActiveTab] = useState<'audit' | 'security' | 'raw'>('audit');
   const isStarred = Boolean(record.starred);
 
-  // 100% Dynamic Audit Events constructed directly from real record attributes
+  // Dynamic Audit Events constructed directly from real asset attributes
   const dynamicAuditEvents = [
     {
       severity: record.priority === 'critical' || record.priority === 'high' ? 'High' : 'Medium',
-      rule: `Money-based Priority set to ${record.priority.toUpperCase()}`,
+      rule: `Threat Severity Level evaluated at ${record.priority.toUpperCase()}`,
       triggered: record.updatedAt,
-      scope: 'Financial',
+      scope: 'Threat Detection',
       status: record.status,
     },
     {
-      severity: record.value >= 50000 ? 'High' : 'Low',
-      rule: `Financial evaluation registered ($${record.value.toLocaleString()})`,
+      severity: record.value >= 75 ? 'High' : record.value >= 50 ? 'Medium' : 'Low',
+      rule: `Composite Risk Score calculated (${record.value}/100 Exposure Index)`,
       triggered: record.createdAt,
-      scope: 'Valuation',
+      scope: 'Vulnerability Assessment',
       status: 'active',
     },
     {
       severity: 'Low',
-      rule: `Record owner assigned to ${record.owner}`,
+      rule: `Assigned SOC Lead: ${record.owner}`,
       triggered: record.createdAt,
-      scope: 'System',
+      scope: 'Access Control',
       status: 'active',
     },
   ];
@@ -52,7 +52,7 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
             <StatusBadge value={record.priority} variant="priority" />
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-            Assigned to {record.owner} · {record.description}
+            SecOps Owner: {record.owner} · {record.description}
           </p>
         </div>
 
@@ -141,27 +141,29 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
         }}
       >
         <div>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Title</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Asset / Target</span>
           <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginTop: 4 }}>{record.name}</p>
         </div>
         <div>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Created At</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Discovered</span>
           <p style={{ fontSize: 13, color: 'var(--text)', marginTop: 4 }}>{record.createdAt}</p>
         </div>
         <div>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Updated At</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Scanned</span>
           <p style={{ fontSize: 13, color: 'var(--text)', marginTop: 4 }}>{record.updatedAt}</p>
         </div>
         <div>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Financial Value</span>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#1e7e34', marginTop: 4 }}>${record.value.toLocaleString()}</p>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Risk Score</span>
+          <p style={{ fontSize: 14, fontWeight: 700, color: record.value >= 75 ? '#dc3545' : record.value >= 50 ? '#ea580c' : '#2563eb', marginTop: 4 }}>
+            {record.value} / 100
+          </p>
         </div>
       </div>
 
-      {/* Sub-Tabs: Audit Events | Financial Audit | Raw Fields */}
+      {/* Sub-Tabs: Audit Events | Security Risk | Raw Fields */}
       <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', gap: 20 }}>
-        {(['audit', 'financial', 'raw'] as const).map(tab => {
-          const labelMap = { audit: 'Audit Events', financial: 'Financial Audit', raw: 'Raw Fields' };
+        {(['audit', 'security', 'raw'] as const).map(tab => {
+          const labelMap = { audit: 'Audit Log Events', security: 'Security Risk Audit', raw: 'Raw Telemetry' };
           const isActive = activeTab === tab;
           return (
             <button
@@ -217,19 +219,21 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
         </div>
       )}
 
-      {activeTab === 'financial' && (
+      {activeTab === 'security' && (
         <div style={{ padding: 16, background: 'var(--bg-subtle)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 13 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ color: 'var(--text-muted)' }}>Evaluation Value:</span>
-            <strong style={{ color: '#1e7e34' }}>${record.value.toLocaleString()}</strong>
+            <span style={{ color: 'var(--text-muted)' }}>Threat Risk Score:</span>
+            <strong style={{ color: record.value >= 75 ? '#dc3545' : record.value >= 50 ? '#ea580c' : '#2563eb' }}>
+              {record.value} / 100
+            </strong>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ color: 'var(--text-muted)' }}>Money-Based Priority:</span>
+            <span style={{ color: 'var(--text-muted)' }}>Threat Severity Level:</span>
             <strong style={{ textTransform: 'capitalize' }}>{record.priority}</strong>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: 'var(--text-muted)' }}>Completion Progress:</span>
-            <strong>{record.progress}%</strong>
+            <span style={{ color: 'var(--text-muted)' }}>Remediation Progress:</span>
+            <strong>{record.progress}% Complete</strong>
           </div>
         </div>
       )}

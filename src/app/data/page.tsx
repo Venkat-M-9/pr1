@@ -40,14 +40,14 @@ export default function DataManagementPage() {
     return list.length > 0 ? list : records;
   }, [records, filteredRecords]);
 
-  // Live Aggregate Financial Metrics calculated dynamically from active filtered dataset slice
-  const totalValue = useMemo(
-    () => activeFilteredRecords.reduce((acc, r) => acc + r.value, 0),
+  // Live Aggregate Security Metrics calculated dynamically from active filtered dataset slice
+  const criticalCount = useMemo(
+    () => activeFilteredRecords.filter(r => r.priority === 'critical' || r.value >= 75).length,
     [activeFilteredRecords]
   );
-  const avgValue = useMemo(
-    () => (activeFilteredRecords.length > 0 ? totalValue / activeFilteredRecords.length : 0),
-    [activeFilteredRecords, totalValue]
+  const avgRiskScore = useMemo(
+    () => (activeFilteredRecords.length > 0 ? activeFilteredRecords.reduce((acc, r) => acc + r.value, 0) / activeFilteredRecords.length : 0),
+    [activeFilteredRecords]
   );
 
   const toggleSelectRow = (id: string) => {
@@ -82,7 +82,7 @@ export default function DataManagementPage() {
               type="checkbox"
               checked={isAllSelected}
               onChange={() => toggleSelectAllVisible(currentRows)}
-              title="Select all visible records"
+              title="Select all visible assets"
               style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--accent)' }}
             />
           );
@@ -98,30 +98,38 @@ export default function DataManagementPage() {
                 e.stopPropagation();
                 toggleSelectRow(info.row.original.id);
               }}
-              title="Select record"
+              title="Select asset"
               style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--accent)' }}
             />
           );
         },
       },
-      { accessorKey: 'id', header: 'Record ID', size: 100 },
-      { accessorKey: 'name', header: 'Title / Name', size: 180 },
+      { accessorKey: 'id', header: 'Asset ID', size: 110 },
+      { accessorKey: 'name', header: 'Asset / Target Name', size: 240 },
       {
         accessorKey: 'status',
-        header: 'Status',
+        header: 'Monitoring Status',
         cell: info => <StatusBadge value={info.getValue()} variant="status" />,
       },
       {
         accessorKey: 'priority',
-        header: 'Priority',
+        header: 'Severity',
         cell: info => <StatusBadge value={info.getValue()} variant="priority" />,
       },
-      { accessorKey: 'owner', header: 'Owner' },
-      { accessorKey: 'createdAt', header: 'Created Date' },
+      { accessorKey: 'owner', header: 'SecOps Owner' },
+      { accessorKey: 'createdAt', header: 'Discovered Date' },
       {
         accessorKey: 'value',
-        header: 'Value ($)',
-        cell: info => `$${info.getValue().toLocaleString()}`,
+        header: 'Risk Score',
+        cell: info => {
+          const val = Number(info.getValue());
+          const color = val >= 75 ? '#dc3545' : val >= 50 ? '#ea580c' : '#2563eb';
+          return (
+            <span style={{ fontWeight: 700, color, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              {val} / 100
+            </span>
+          );
+        },
       },
     ],
     [selectedIds, records]
@@ -130,49 +138,49 @@ export default function DataManagementPage() {
   const filterGroups = [
     {
       id: 'starred',
-      label: 'Starred',
+      label: 'Watchlist',
       options: [
-        { label: 'Starred Only', value: 'true' },
-        { label: 'Unstarred Only', value: 'false' },
+        { label: 'Watchlist Only', value: 'true' },
+        { label: 'Unflagged', value: 'false' },
       ],
     },
     {
       id: 'status',
       label: 'Status',
       options: [
-        { label: 'Active', value: 'active' },
-        { label: 'Inactive', value: 'inactive' },
-        { label: 'Pending', value: 'pending' },
-        { label: 'Archived', value: 'archived' },
+        { label: 'Active Monitoring', value: 'active' },
+        { label: 'Inactive / Offline', value: 'inactive' },
+        { label: 'Remediation Pending', value: 'pending' },
+        { label: 'Archived / Remediated', value: 'archived' },
       ],
     },
     {
       id: 'priority',
-      label: 'Priority',
+      label: 'Threat Severity',
       options: [
-        { label: 'Low (<$25k)', value: 'low' },
-        { label: 'Medium ($25k-$50k)', value: 'medium' },
-        { label: 'High ($50k-$75k)', value: 'high' },
-        { label: 'Critical ($75k+)', value: 'critical' },
+        { label: 'Low Severity (Score < 25)', value: 'low' },
+        { label: 'Medium Severity (Score 25-50)', value: 'medium' },
+        { label: 'High Severity (Score 50-75)', value: 'high' },
+        { label: 'Critical Severity (Score 75+)', value: 'critical' },
       ],
     },
   ];
 
   const recordImportSchema: FieldSchema<SystemRecord>[] = [
-    { key: 'id', label: 'Record ID', defaultValue: `REC-${Math.floor(Math.random() * 90000 + 10000)}` },
-    { key: 'name', label: 'Title / Name', defaultValue: 'New Imported Record' },
+    { key: 'id', label: 'Asset ID', defaultValue: `AST-${Math.floor(Math.random() * 90000 + 10000)}` },
+    { key: 'name', label: 'Asset / Target Name', defaultValue: 'New Monitored Infrastructure' },
     { key: 'status', label: 'Status', defaultValue: 'active' },
-    { key: 'priority', label: 'Priority', defaultValue: 'medium' },
-    { key: 'owner', label: 'Owner', defaultValue: 'System Admin' },
-    { key: 'value', label: 'Value ($)', type: 'number', defaultValue: 50000 },
-    { key: 'createdAt', label: 'Created Date', defaultValue: new Date().toISOString().split('T')[0] },
-    { key: 'updatedAt', label: 'Updated Date', defaultValue: new Date().toISOString().split('T')[0] },
-    { key: 'description', label: 'Description', defaultValue: 'Imported via data manager.' },
+    { key: 'priority', label: 'Severity', defaultValue: 'medium' },
+    { key: 'owner', label: 'SecOps Owner', defaultValue: 'Sarah Connor (SOC Lead)' },
+    { key: 'value', label: 'Risk Score (0-100)', type: 'number', defaultValue: 65 },
+    { key: 'createdAt', label: 'Discovered Date', defaultValue: new Date().toISOString().split('T')[0] },
+    { key: 'updatedAt', label: 'Last Scanned', defaultValue: new Date().toISOString().split('T')[0] },
+    { key: 'description', label: 'Description', defaultValue: 'Imported security asset telemetry.' },
   ];
 
   const handleCreateRecord = (newRecord: SystemRecord) => {
     addRecord(newRecord);
-    toast.crud('create', 'Record Created', `${newRecord.id} (${newRecord.name}) added to dataset.`, {
+    toast.crud('create', 'Asset Registered', `${newRecord.id} (${newRecord.name}) added to SOC registry.`, {
       recordId: newRecord.id,
       recordName: newRecord.name,
       undo: () => deleteRecord(newRecord.id),
@@ -181,7 +189,7 @@ export default function DataManagementPage() {
 
   const handleSaveEdit = (updatedRecord: SystemRecord) => {
     updateRecord(updatedRecord);
-    toast.crud('update', 'Record Updated', `${updatedRecord.id} (${updatedRecord.name}) saved with priority ${updatedRecord.priority.toUpperCase()}.`, {
+    toast.crud('update', 'Asset Updated', `${updatedRecord.id} (${updatedRecord.name}) saved with severity ${updatedRecord.priority.toUpperCase()}.`, {
       recordId: updatedRecord.id,
       recordName: updatedRecord.name,
     });
@@ -191,12 +199,12 @@ export default function DataManagementPage() {
     if (!deletingRecord) return;
     const deleted = deletingRecord;
     deleteRecord(deleted.id);
-    toast.crud('delete', 'Record Deleted', `${deleted.id} (${deleted.name}) permanently removed.`, {
+    toast.crud('delete', 'Asset Decommissioned', `${deleted.id} (${deleted.name}) removed from monitoring.`, {
       recordId: deleted.id,
       recordName: deleted.name,
       undo: () => {
         addRecord(deleted);
-        toast.crud('create', 'Record Restored', `${deleted.id} was successfully restored.`);
+        toast.crud('create', 'Asset Restored', `${deleted.id} was successfully restored.`);
       },
     });
     setDeletingRecord(null);
@@ -206,10 +214,10 @@ export default function DataManagementPage() {
     const ids = Array.from(selectedIds);
     const deletedList = records.filter(r => selectedIds.has(r.id));
     deleteRecords(ids);
-    toast.crud('bulk_delete', 'Batch Delete Complete', `Successfully removed ${ids.length} records from the workspace.`, {
+    toast.crud('bulk_delete', 'Batch Decommission Complete', `Successfully removed ${ids.length} assets from monitoring.`, {
       undo: () => {
         importRecords(deletedList);
-        toast.crud('import', 'Batch Restore Complete', `Restored ${deletedList.length} records.`);
+        toast.crud('import', 'Batch Restore Complete', `Restored ${deletedList.length} assets.`);
       },
     });
     setSelectedIds(new Set());
@@ -219,7 +227,7 @@ export default function DataManagementPage() {
   const handleExecuteBulkEdit = (updates: { status?: Status; priority?: Priority }) => {
     const ids = Array.from(selectedIds);
     updateRecords(ids, updates);
-    toast.crud('bulk_edit', 'Batch Edit Complete', `Successfully updated ${ids.length} selected records.`);
+    toast.crud('bulk_edit', 'Batch Status Updated', `Successfully updated ${ids.length} selected assets.`);
     setSelectedIds(new Set());
     setIsBulkEditOpen(false);
   };
@@ -228,34 +236,34 @@ export default function DataManagementPage() {
     const rec = records.find(r => r.id === id);
     const willStar = !rec?.starred;
     toggleStarRecord(id);
-    toast.crud('star', willStar ? 'Record Starred' : 'Removed from Starred', `${id} (${rec?.name || 'Record'}) was ${willStar ? 'added to favorites' : 'unfavorited'}.`);
+    toast.crud('star', willStar ? 'Added to Watchlist' : 'Removed from Watchlist', `${id} (${rec?.name || 'Asset'}) was ${willStar ? 'flagged for priority monitoring' : 'removed from watchlist'}.`);
   };
 
   return (
     <PageShell
-      title="Data Management"
-      description="Financial & master record repository with multi-select batch controls, virtualization, and export capabilities."
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Data Management' }]}
+      title="Security Asset & Threat Telemetry Management"
+      description="SOC crown-jewel asset inventory, threat exposure indexes, vulnerability tracking, and batch mitigation controls."
+      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Asset Management' }]}
     >
-      {/* Financial Overview Cards */}
+      {/* Security Overview Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
         <SummaryCard
-          title="TOTAL DATASET VALUE"
-          value={`$${(totalValue / 1000000).toFixed(2)}M`}
-          subtitle="Real-time aggregate value of filtered slice"
-          icon={<DollarSign size={18} color="#1e7e34" />}
+          title="CRITICAL RISK ASSETS"
+          value={`${criticalCount} Crown Jewels`}
+          subtitle="Assets with Risk Score >= 75 requiring patching"
+          icon={<Activity size={18} color="#dc3545" />}
         />
         <SummaryCard
-          title="MANAGED RECORDS"
+          title="MONITORED ASSETS"
           value={activeFilteredRecords.length.toLocaleString()}
-          subtitle="Currently filtered active items"
+          subtitle="Active infrastructure endpoints under SIEM"
           icon={<Database size={18} />}
         />
         <SummaryCard
-          title="AVERAGE RECORD VALUE"
-          value={`$${Math.round(avgValue).toLocaleString()}`}
-          subtitle="Mean financial evaluation per item"
-          icon={<Activity size={18} />}
+          title="MEAN ASSET RISK SCORE"
+          value={`${Math.round(avgRiskScore)} / 100`}
+          subtitle="Composite threat exposure index"
+          icon={<Activity size={18} color="#ea580c" />}
         />
       </div>
 
