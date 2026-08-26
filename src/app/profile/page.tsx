@@ -39,11 +39,7 @@ export default function ProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: 'Profile Updated',
-      description: 'Your user profile details have been saved.',
-      type: 'success',
-    });
+    toast.crud('profile', 'Profile Updated', `Account details for ${formData.name} saved successfully.`);
   };
 
   const getInitials = (name: string) => {

@@ -24,6 +24,8 @@ export { default as TopFlaggedCard } from './ui/TopFlaggedCard';
 export { default as Modal } from './ui/Modal';
 export { default as StatusBadge } from './ui/StatusBadge';
 export { default as SummaryCard } from './ui/SummaryCard';
+export { default as CreateRecordModal } from './ui/CreateRecordModal';
+export { default as NotificationPopover } from './ui/NotificationPopover';
 export { default as ToastContainer } from './ui/ToastContainer';
 
 /* Chart components */

@@ -68,11 +68,7 @@ export default function ImportModal<T extends Record<string, any>>({
   const handleConfirmImport = () => {
     if (!parsedData || parsedData.length === 0) return;
     onImport(parsedData);
-    toast({
-      title: 'Import Successful',
-      description: `Successfully added ${parsedData.length} ${entityName.toLowerCase()}(s) to dataset.`,
-      type: 'success',
-    });
+    toast.crud('import', 'Import Successful', `Successfully added ${parsedData.length} ${entityName.toLowerCase()}(s) to dataset.`);
     handleClose();
   };
 

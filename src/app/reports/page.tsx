@@ -77,11 +77,7 @@ export default function ReportsPage() {
   const handleGenerateCustom = (e: React.FormEvent) => {
     e.preventDefault();
     setIsModalOpen(false);
-    toast({
-      title: 'Report Generated',
-      description: `Custom report "${reportTitle || 'Untitled Report'}" built successfully.`,
-      type: 'success',
-    });
+    toast.crud('export', 'Report Generated', `Custom statement report "${reportTitle || 'Untitled Report'}" built successfully.`);
     setReportTitle('');
   };
 

@@ -20,7 +20,7 @@ import { Database, Activity, CheckCircle, AlertTriangle, CheckSquare, Edit3, Tra
 import styles from './Home.module.css';
 
 export default function HomePage() {
-  const { records, toggleStarRecord, updateRecord, deleteRecord, deleteRecords, updateRecords } = useDataContext();
+  const { records, toggleStarRecord, updateRecord, deleteRecord, deleteRecords, updateRecords, addRecord, importRecords } = useDataContext();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingRecord, setEditingRecord] = useState<SystemRecord | null>(null);
@@ -173,31 +173,31 @@ export default function HomePage() {
 
   const handleSaveEdit = (updatedRecord: SystemRecord) => {
     updateRecord(updatedRecord);
-    toast({
-      title: 'Record Updated',
-      description: `${updatedRecord.id} saved successfully.`,
-      type: 'success',
-    });
+    toast.crud('update', 'Record Updated', `${updatedRecord.id} (${updatedRecord.name}) saved successfully.`);
   };
 
   const handleConfirmDelete = () => {
     if (!deletingRecord) return;
-    deleteRecord(deletingRecord.id);
-    toast({
-      title: 'Record Deleted',
-      description: `${deletingRecord.id} was permanently removed.`,
-      type: 'success',
+    const deleted = deletingRecord;
+    deleteRecord(deleted.id);
+    toast.crud('delete', 'Record Deleted', `${deleted.id} (${deleted.name}) was deleted.`, {
+      undo: () => {
+        addRecord(deleted);
+        toast.crud('create', 'Record Restored', `${deleted.id} was successfully restored.`);
+      },
     });
     setDeletingRecord(null);
   };
 
   const handleExecuteBulkDelete = () => {
     const ids = Array.from(selectedIds);
+    const deletedList = records.filter(r => selectedIds.has(r.id));
     deleteRecords(ids);
-    toast({
-      title: 'Batch Delete Successful',
-      description: `Successfully deleted ${ids.length} selected items.`,
-      type: 'success',
+    toast.crud('bulk_delete', 'Batch Delete Complete', `Successfully deleted ${ids.length} records.`, {
+      undo: () => {
+        importRecords(deletedList);
+        toast.crud('import', 'Batch Restore Complete', `Restored ${deletedList.length} records.`);
+      },
     });
     setSelectedIds(new Set());
     setIsBulkDeleteConfirmOpen(false);
@@ -206,13 +206,16 @@ export default function HomePage() {
   const handleExecuteBulkEdit = (updates: { status?: Status; priority?: Priority }) => {
     const ids = Array.from(selectedIds);
     updateRecords(ids, updates);
-    toast({
-      title: 'Batch Edit Successful',
-      description: `Updated ${ids.length} selected items.`,
-      type: 'success',
-    });
+    toast.crud('bulk_edit', 'Batch Edit Complete', `Updated ${ids.length} selected records.`);
     setSelectedIds(new Set());
     setIsBulkEditOpen(false);
+  };
+
+  const handleToggleStar = (id: string) => {
+    const rec = records.find(r => r.id === id);
+    const willStar = !rec?.starred;
+    toggleStarRecord(id);
+    toast.crud('star', willStar ? 'Record Starred' : 'Removed from Starred', `${id} (${rec?.name || 'Record'}) was ${willStar ? 'added to favorites' : 'unfavorited'}.`);
   };
 
   return (
@@ -378,7 +381,7 @@ export default function HomePage() {
             renderDetail={selectedRecord => (
               <RecordDetailView
                 record={selectedRecord}
-                onToggleStar={toggleStarRecord}
+                onToggleStar={handleToggleStar}
                 onEdit={rec => setEditingRecord(rec)}
                 onDelete={rec => setDeletingRecord(rec)}
               />

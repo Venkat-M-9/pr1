@@ -11,7 +11,7 @@ import { useTableManager, FilterGroup } from '@/hooks/useTableManager';
 import { usePreferences } from '@/context/PreferencesContext';
 import { exportToCSV, FieldSchema } from '@/lib/exportUtils';
 import { toast } from '@/lib/toast';
-import { Download, Upload } from 'lucide-react';
+import { Download, Upload, Plus } from 'lucide-react';
 
 export interface ResourceTableProps<TData> {
   data: TData[];
@@ -26,6 +26,8 @@ export interface ResourceTableProps<TData> {
   importable?: boolean;
   importSchema?: FieldSchema<TData>[];
   onImport?: (newItems: TData[]) => void;
+  onAddClick?: () => void;
+  addLabel?: string;
   renderDetail?: (item: TData) => ReactNode;
   getDetailTitle?: (item: TData) => string;
   actions?: ReactNode;
@@ -46,6 +48,8 @@ export default function ResourceTable<TData extends Record<string, any>>({
   importable = false,
   importSchema,
   onImport,
+  onAddClick,
+  addLabel,
   renderDetail,
   getDetailTitle,
   actions,
@@ -127,11 +131,7 @@ export default function ResourceTable<TData extends Record<string, any>>({
           return { key, label };
         })
       );
-      toast({
-        title: 'Export Complete',
-        description: `Exported ${filteredCount.toLocaleString()} ${resourceName.toLowerCase()}(s) to CSV file.`,
-        type: 'success',
-      });
+      toast.crud('export', 'Export Complete', `Exported ${filteredCount.toLocaleString()} ${resourceName.toLowerCase()}(s) to CSV.`);
       setIsExporting(false);
     }, 150);
   };
@@ -149,6 +149,28 @@ export default function ResourceTable<TData extends Record<string, any>>({
         onResetFilters={resetFilters}
         actions={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {onAddClick && (
+              <button
+                type="button"
+                onClick={onAddClick}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '6px 12px',
+                  background: 'var(--accent)',
+                  color: 'var(--accent-fg)',
+                  border: 'none',
+                  borderRadius: 'var(--radius)',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                <Plus size={14} /> {addLabel || `New ${resourceName}`}
+              </button>
+            )}
+
             {importable && importSchema && onImport && (
               <button
                 type="button"
@@ -180,9 +202,9 @@ export default function ResourceTable<TData extends Record<string, any>>({
                   alignItems: 'center',
                   gap: 6,
                   padding: '6px 12px',
-                  background: 'var(--accent)',
-                  color: 'var(--accent-fg)',
-                  border: 'none',
+                  background: 'var(--surface)',
+                  color: 'var(--text)',
+                  border: '1px solid var(--border)',
                   borderRadius: 'var(--radius)',
                   fontSize: 13,
                   fontWeight: 500,

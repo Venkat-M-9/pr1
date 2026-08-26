@@ -12,11 +12,7 @@ export default function SettingsPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useLocalStorage('pref_notifications', true);
 
   const handleSave = () => {
-    toast({
-      title: 'Preferences Saved',
-      description: 'Your workspace settings have been persisted.',
-      type: 'success',
-    });
+    toast.crud('settings', 'Preferences Saved', 'Your workspace preferences and table configuration have been persisted.');
   };
 
   return (

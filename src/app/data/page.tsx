@@ -6,6 +6,7 @@ import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
 import RecordDetailView from '@/components/ui/RecordDetailView';
 import EditRecordModal from '@/components/ui/EditRecordModal';
+import CreateRecordModal from '@/components/ui/CreateRecordModal';
 import BulkEditModal from '@/components/ui/BulkEditModal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import SummaryCard from '@/components/ui/SummaryCard';
@@ -17,9 +18,10 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Trash2, Edit3, DollarSign, Database, Activity, CheckSquare } from 'lucide-react';
 
 export default function DataManagementPage() {
-  const { records, importRecords, toggleStarRecord, updateRecord, deleteRecord, deleteRecords, updateRecords } = useDataContext();
+  const { records, importRecords, toggleStarRecord, updateRecord, deleteRecord, deleteRecords, updateRecords, addRecord } = useDataContext();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<SystemRecord | null>(null);
   const [deletingRecord, setDeletingRecord] = useState<SystemRecord | null>(null);
   const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
@@ -168,33 +170,47 @@ export default function DataManagementPage() {
     { key: 'description', label: 'Description', defaultValue: 'Imported via data manager.' },
   ];
 
+  const handleCreateRecord = (newRecord: SystemRecord) => {
+    addRecord(newRecord);
+    toast.crud('create', 'Record Created', `${newRecord.id} (${newRecord.name}) added to dataset.`, {
+      recordId: newRecord.id,
+      recordName: newRecord.name,
+      undo: () => deleteRecord(newRecord.id),
+    });
+  };
+
   const handleSaveEdit = (updatedRecord: SystemRecord) => {
     updateRecord(updatedRecord);
-    toast({
-      title: 'Record Updated',
-      description: `${updatedRecord.id} updated successfully.`,
-      type: 'success',
+    toast.crud('update', 'Record Updated', `${updatedRecord.id} (${updatedRecord.name}) saved with priority ${updatedRecord.priority.toUpperCase()}.`, {
+      recordId: updatedRecord.id,
+      recordName: updatedRecord.name,
     });
   };
 
   const handleConfirmDelete = () => {
     if (!deletingRecord) return;
-    deleteRecord(deletingRecord.id);
-    toast({
-      title: 'Record Deleted',
-      description: `${deletingRecord.id} deleted.`,
-      type: 'success',
+    const deleted = deletingRecord;
+    deleteRecord(deleted.id);
+    toast.crud('delete', 'Record Deleted', `${deleted.id} (${deleted.name}) permanently removed.`, {
+      recordId: deleted.id,
+      recordName: deleted.name,
+      undo: () => {
+        addRecord(deleted);
+        toast.crud('create', 'Record Restored', `${deleted.id} was successfully restored.`);
+      },
     });
     setDeletingRecord(null);
   };
 
   const handleExecuteBulkDelete = () => {
     const ids = Array.from(selectedIds);
+    const deletedList = records.filter(r => selectedIds.has(r.id));
     deleteRecords(ids);
-    toast({
-      title: 'Batch Delete Successful',
-      description: `Successfully deleted ${ids.length} selected records.`,
-      type: 'success',
+    toast.crud('bulk_delete', 'Batch Delete Complete', `Successfully removed ${ids.length} records from the workspace.`, {
+      undo: () => {
+        importRecords(deletedList);
+        toast.crud('import', 'Batch Restore Complete', `Restored ${deletedList.length} records.`);
+      },
     });
     setSelectedIds(new Set());
     setIsBulkDeleteConfirmOpen(false);
@@ -203,13 +219,16 @@ export default function DataManagementPage() {
   const handleExecuteBulkEdit = (updates: { status?: Status; priority?: Priority }) => {
     const ids = Array.from(selectedIds);
     updateRecords(ids, updates);
-    toast({
-      title: 'Batch Edit Successful',
-      description: `Updated ${ids.length} selected records.`,
-      type: 'success',
-    });
+    toast.crud('bulk_edit', 'Batch Edit Complete', `Successfully updated ${ids.length} selected records.`);
     setSelectedIds(new Set());
     setIsBulkEditOpen(false);
+  };
+
+  const handleToggleStar = (id: string) => {
+    const rec = records.find(r => r.id === id);
+    const willStar = !rec?.starred;
+    toggleStarRecord(id);
+    toast.crud('star', willStar ? 'Record Starred' : 'Removed from Starred', `${id} (${rec?.name || 'Record'}) was ${willStar ? 'added to favorites' : 'unfavorited'}.`);
   };
 
   return (
@@ -331,6 +350,8 @@ export default function DataManagementPage() {
         filterGroups={filterGroups}
         virtualize={true}
         resourceName="Record"
+        onAddClick={() => setIsCreateOpen(true)}
+        addLabel="New Record"
         exportable={true}
         importable={true}
         importSchema={recordImportSchema}
@@ -340,11 +361,18 @@ export default function DataManagementPage() {
         renderDetail={selectedRecord => (
           <RecordDetailView
             record={selectedRecord}
-            onToggleStar={toggleStarRecord}
+            onToggleStar={handleToggleStar}
             onEdit={rec => setEditingRecord(rec)}
             onDelete={rec => setDeletingRecord(rec)}
           />
         )}
+      />
+
+      {/* Create Record Modal */}
+      <CreateRecordModal
+        open={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={handleCreateRecord}
       />
 
       {/* Edit Record Modal */}
@@ -369,7 +397,7 @@ export default function DataManagementPage() {
         onClose={() => setDeletingRecord(null)}
         onConfirm={handleConfirmDelete}
         title="Confirm Delete Record"
-        description={`Are you sure you want to delete ${deletingRecord?.id}? This action will permanently remove it from the system.`}
+        description={`Are you sure you want to delete ${deletingRecord?.id}? This action will remove it from the system.`}
         confirmText="Delete Record"
         variant="danger"
       />
@@ -380,7 +408,7 @@ export default function DataManagementPage() {
         onClose={() => setIsBulkDeleteConfirmOpen(false)}
         onConfirm={handleExecuteBulkDelete}
         title="Confirm Batch Delete"
-        description={`Are you sure you want to delete all ${selectedIds.size} selected records? This action cannot be undone.`}
+        description={`Are you sure you want to delete all ${selectedIds.size} selected records?`}
         confirmText={`Delete ${selectedIds.size} Records`}
         variant="danger"
       />

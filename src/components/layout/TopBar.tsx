@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
+import NotificationPopover from '@/components/ui/NotificationPopover';
 
 interface Props {
   title?: string;
@@ -70,13 +71,7 @@ export default function TopBar({ title, onMobileMenuToggle }: Props) {
       </div>
 
       <div className={styles.right}>
-        <button
-          className={styles.iconBtn}
-          onClick={() => toast({ title: 'Notifications', description: 'No new unread messages.', type: 'info' })}
-          aria-label="View notifications"
-        >
-          <Bell size={16} />
-        </button>
+        <NotificationPopover />
 
         <button
           className={styles.iconBtn}
