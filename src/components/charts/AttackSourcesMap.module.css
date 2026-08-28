@@ -18,7 +18,7 @@
 
 .header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
@@ -31,7 +31,7 @@
 }
 
 .title {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text);
   margin: 0;
@@ -39,232 +39,186 @@
 }
 
 .subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
-.kpiRibbon {
+.topRightBadge {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.kpiBox {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 12px;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.kpiLabel {
-  font-size: 10px;
-  text-transform: uppercase;
-  color: var(--text-muted);
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.kpiValue {
-  font-size: 13px;
-  font-weight: 700;
   color: var(--text);
-  font-family: var(--font-mono, monospace);
 }
 
-.mainLayout {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-  align-items: stretch;
-}
-
-@media (max-width: 1024px) {
-  .mainLayout {
-    grid-template-columns: 1fr;
-  }
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
 }
 
 .mapViewport {
   position: relative;
   width: 100%;
-  min-height: 420px;
-  background: radial-gradient(circle at 50% 50%, var(--surface-hover) 0%, var(--bg) 100%);
+  min-height: 440px;
+  background: #0f172a; /* Deep command-center navy matching reference */
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] .mapViewport {
+  background: #f8fafc;
+  border-color: var(--border);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.03);
 }
 
 .worldSvg {
   width: 100%;
   height: 100%;
-  min-height: 420px;
+  min-height: 440px;
+  display: block;
 }
 
-.sideTelemetry {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+/* Continent Paths */
+.landmass {
+  fill: #1e293b;
+  stroke: #334155;
+  stroke-width: 0.6;
+  transition: fill 200ms ease;
 }
 
-.filterTabs {
-  display: flex;
-  gap: 6px;
-  padding: 4px;
+[data-theme="light"] .landmass {
+  fill: #273859;
+  stroke: #1e293b;
+}
+
+.landmass:hover {
+  fill: #28374d;
+}
+
+/* Concentric Rings Styling */
+.epicenterRing {
+  fill: none;
+  stroke: #ef4444;
+  opacity: 0.85;
+  transition: stroke-width 150ms ease, opacity 150ms ease;
+}
+
+.epicenterRingCenter {
+  fill: #ef4444;
+  opacity: 0.9;
+}
+
+.epicenterNode:hover .epicenterRing {
+  stroke-width: 1.5;
+  opacity: 1;
+}
+
+/* Curved Inter-Hub Attack Arcs */
+.attackArc {
+  fill: none;
+  stroke: #ef4444;
+  stroke-width: 1.2;
+  opacity: 0.75;
+  transition: opacity 150ms ease, stroke-width 150ms ease;
+}
+
+.attackArcHovered {
+  stroke: #ff6b6b;
+  stroke-width: 2.2;
+  opacity: 1;
+}
+
+/* Bottom Telemetry HUD Grid matching Reference Image 2 */
+.telemetryHud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.hudCard {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-}
-
-.filterBtn {
-  flex: 1;
-  padding: 6px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all var(--transition);
-  text-align: center;
-}
-
-.filterBtnActive {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
-}
-
-.countryScrollList {
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 360px;
-  overflow-y: auto;
-  padding-right: 4px;
 }
 
-.countryCard {
+.hudHeader {
+  padding: 6px 12px;
+  background: #ea580c;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: all var(--transition);
 }
 
-.countryCard:hover, .countryCardActive {
+.hudHeaderDark {
   background: var(--surface-hover);
-  border-color: var(--border-strong);
-  transform: translateX(2px);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
 }
 
-.countryInfo {
+.hudBody {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hudRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+.hudLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
 
-.isoBadge {
-  font-size: 11px;
-  font-weight: 700;
+.hudFlag {
   font-family: var(--font-mono, monospace);
-  padding: 3px 6px;
-  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
 }
 
-.countryDetails {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.countryName {
-  font-size: 13px;
-  font-weight: 600;
+.hudName {
+  font-weight: 500;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.countryThreat {
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.countryMetrics {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.countText {
-  font-size: 13px;
+.hudValue {
   font-weight: 700;
-  color: var(--text);
   font-family: var(--font-mono, monospace);
-}
-
-.progressBarTrack {
-  width: 80px;
-  height: 5px;
-  background: var(--border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.progressBarFill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width var(--transition);
-}
-
-/* Trajectory Arc Animation */
-@keyframes dashPulse {
-  to {
-    stroke-dashoffset: -40;
-  }
-}
-
-.attackArc {
-  stroke-dasharray: 4 4;
-  animation: dashPulse 1.5s linear infinite;
-}
-
-/* Radar Pulse Animations */
-@keyframes radarWave {
-  0% {
-    r: 6;
-    opacity: 0.8;
-  }
-  100% {
-    r: 28;
-    opacity: 0;
-  }
-}
-
-.radarPulse {
-  animation: radarWave 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+  color: var(--text);
 }
