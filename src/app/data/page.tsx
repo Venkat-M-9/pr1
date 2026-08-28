@@ -15,7 +15,7 @@ import { Record as SystemRecord, Status, Priority } from '@/lib/mockData';
 import { FieldSchema } from '@/lib/exportUtils';
 import { toast } from '@/lib/toast';
 import { ColumnDef } from '@tanstack/react-table';
-import { Trash2, Edit3, DollarSign, Database, Activity, CheckSquare } from 'lucide-react';
+import { Trash2, Edit3, Database, Activity, CheckSquare } from 'lucide-react';
 
 export default function DataManagementPage() {
   const { records, importRecords, toggleStarRecord, updateRecord, deleteRecord, deleteRecords, updateRecords, addRecord } = useDataContext();

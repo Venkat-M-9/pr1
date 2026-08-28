@@ -44,18 +44,6 @@ export interface Entry {
   notes: string;
 }
 
-export interface Item {
-  id: string;
-  name: string;
-  sku: string;
-  status: Status;
-  quantity: number;
-  unit: string;
-  price: number;
-  supplier: string;
-  lastUpdated: string;
-}
-
 // Seeded pseudo-random (deterministic)
 function seededRandom(seed: number) {
   let s = seed;

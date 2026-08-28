@@ -30,3 +30,6 @@ export { default as ToastContainer } from './ui/ToastContainer';
 
 /* Chart components */
 export { default as ChartCard } from './charts/ChartCard';
+export { default as ThreatTrendChart } from './charts/ThreatTrendChart';
+export { default as ThreatSeverityDonut } from './charts/ThreatSeverityDonut';
+export { default as TopThreatTypesChart } from './charts/TopThreatTypesChart';

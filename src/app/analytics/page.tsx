@@ -1,155 +1,223 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PageShell from '@/components/layout/PageShell';
-import ChartCard from '@/components/charts/ChartCard';
 import FilterBar from '@/components/ui/FilterBar';
 import SummaryCard from '@/components/ui/SummaryCard';
-import { useDataContext } from '@/context/DataContext';
 import {
-  aggregateByMonth,
-  aggregateByStatus,
-  aggregateByPriority,
-} from '@/lib/mockData';
-import { BarChart2, PieChart as PieIcon, TrendingUp, Filter, AlertTriangle } from 'lucide-react';
+  ThreatTrendChart,
+  ThreatSeverityDonut,
+  TopThreatTypesChart,
+} from '@/components';
+import { useDataContext } from '@/context/DataContext';
+import { cybersecurityApi } from '@/lib/apiClient';
+import { getThreatTrends, THREAT_TYPES } from '@/lib/cybersecurityData';
+import { ThreatSeverity, TimeSeriesThreatPoint } from '@/types/cybersecurity';
+import { toast } from '@/lib/toast';
+import {
+  ShieldAlert,
+  ShieldCheck,
+  Flame,
+  Activity,
+  Download,
+} from 'lucide-react';
 
 export default function AnalyticsPage() {
-  const { records: allRecords } = useDataContext();
+  const { records } = useDataContext();
+  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+  const [selectedSeverity, setSelectedSeverity] = useState<ThreatSeverity | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const [selectedPriority, setSelectedPriority] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  // API State
+  const [trend24h, setTrend24h] = useState<TimeSeriesThreatPoint[]>(() => getThreatTrends('24h'));
+  const [trend7d, setTrend7d] = useState<TimeSeriesThreatPoint[]>(() => getThreatTrends('7d'));
+  const [trend30d, setTrend30d] = useState<TimeSeriesThreatPoint[]>(() => getThreatTrends('30d'));
+  const [apiSeverityData, setApiSeverityData] = useState<any[] | null>(null);
+  const [apiVectorsData, setApiVectorsData] = useState<any[] | null>(null);
 
-  const filteredRecords = useMemo(() => {
-    return allRecords.filter(r => {
-      if (selectedPriority && r.priority !== selectedPriority) return false;
-      if (selectedStatus && r.status !== selectedStatus) return false;
+  // Fetch from real server API routes
+  useEffect(() => {
+    async function loadApiData() {
+      try {
+        const [res24h, res7d, res30d, resSev, resVectors] = await Promise.allSettled([
+          cybersecurityApi.getThreatTrends('24h'),
+          cybersecurityApi.getThreatTrends('7d'),
+          cybersecurityApi.getThreatTrends('30d'),
+          cybersecurityApi.getThreatSeverity(),
+          cybersecurityApi.getTopVectors({ limit: 10 }),
+        ]);
+
+        if (res24h.status === 'fulfilled' && res24h.value.data) setTrend24h(res24h.value.data);
+        if (res7d.status === 'fulfilled' && res7d.value.data) setTrend7d(res7d.value.data);
+        if (res30d.status === 'fulfilled' && res30d.value.data) setTrend30d(res30d.value.data);
+        if (resSev.status === 'fulfilled' && resSev.value.data) setApiSeverityData(resSev.value.data);
+        if (resVectors.status === 'fulfilled' && resVectors.value.data) setApiVectorsData(resVectors.value.data);
+      } catch (err) {
+        console.error('Failed to fetch from telemetry APIs, using fallback store:', err);
+      }
+    }
+    loadApiData();
+  }, []);
+
+  // Compute live threat counts dynamically from master SOC records
+  const criticalCount = useMemo(() => records.filter(r => r.priority === 'critical' || r.value >= 75).length, [records]);
+  const highCount = useMemo(() => records.filter(r => r.priority === 'high' || (r.value >= 50 && r.value < 75)).length, [records]);
+  const mediumCount = useMemo(() => records.filter(r => r.priority === 'medium' || (r.value >= 25 && r.value < 50)).length, [records]);
+  const lowCount = useMemo(() => records.filter(r => r.priority === 'low' || r.value < 25).length, [records]);
+
+  // Threat Severity summary data for Donut Chart (prefers live API response, synchronized with DataContext records)
+  const severityDonutData = useMemo(() => {
+    if (apiSeverityData && apiSeverityData.length > 0) {
+      return apiSeverityData;
+    }
+    return [
+      { name: 'Critical', severity: 'critical' as ThreatSeverity, count: criticalCount, color: '#dc2626' },
+      { name: 'High', severity: 'high' as ThreatSeverity, count: highCount, color: '#ea580c' },
+      { name: 'Medium', severity: 'medium' as ThreatSeverity, count: mediumCount, color: '#d97706' },
+      { name: 'Low', severity: 'low' as ThreatSeverity, count: lowCount, color: '#2563eb' },
+    ];
+  }, [apiSeverityData, criticalCount, highCount, mediumCount, lowCount]);
+
+  // Top Threat Types metrics for Horizontal Bar Chart
+  const topThreatTypesData = useMemo(() => {
+    const rawList = apiVectorsData && apiVectorsData.length > 0
+      ? apiVectorsData
+      : THREAT_TYPES.map((t, idx) => ({
+          type: t.type,
+          count: Math.round(1850 / (idx * 0.38 + 1)),
+          tactic: t.tactic,
+          techniqueId: t.techniqueId,
+          severity: t.defaultSev,
+        }));
+
+    if (!selectedSeverity && !searchQuery) return rawList;
+
+    return rawList.filter((item: any) => {
+      if (selectedSeverity && item.severity !== selectedSeverity) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return (
+          item.type.toLowerCase().includes(q) ||
+          item.tactic.toLowerCase().includes(q) ||
+          item.techniqueId.toLowerCase().includes(q)
+        );
+      }
       return true;
     });
-  }, [allRecords, selectedPriority, selectedStatus]);
-
-  const monthlyTrend = useMemo(() => aggregateByMonth(filteredRecords), [filteredRecords]);
-  const statusDist = useMemo(() => aggregateByStatus(filteredRecords), [filteredRecords]);
-  const priorityDist = useMemo(() => aggregateByPriority(filteredRecords), [filteredRecords]);
-
-  const totalValue = useMemo(() => filteredRecords.reduce((acc, r) => acc + r.value, 0), [filteredRecords]);
-  const avgValue = useMemo(
-    () => (filteredRecords.length > 0 ? totalValue / filteredRecords.length : 0),
-    [filteredRecords, totalValue]
-  );
-
-  const highValCount = useMemo(
-    () => filteredRecords.filter(r => r.priority === 'critical' || r.priority === 'high').length,
-    [filteredRecords]
-  );
+  }, [apiVectorsData, selectedSeverity, searchQuery]);
 
   const filterGroups = [
     {
-      id: 'priority',
-      label: 'Priority',
+      id: 'severity',
+      label: 'Threat Severity',
       options: [
-        { label: 'Low (<$25k)', value: 'low' },
-        { label: 'Medium ($25k-$50k)', value: 'medium' },
-        { label: 'High ($50k-$75k)', value: 'high' },
-        { label: 'Critical ($75k+)', value: 'critical' },
-      ],
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      options: [
-        { label: 'Active', value: 'active' },
-        { label: 'Inactive', value: 'inactive' },
-        { label: 'Pending', value: 'pending' },
-        { label: 'Archived', value: 'archived' },
+        { label: 'Critical Severity', value: 'critical' },
+        { label: 'High Severity', value: 'high' },
+        { label: 'Medium Severity', value: 'medium' },
+        { label: 'Low Severity', value: 'low' },
       ],
     },
   ];
 
+  const handleExportTelemetry = () => {
+    toast.crud('export', 'Telemetry Report Exported', `Generated SOC telemetry brief (${timeRange.toUpperCase()} slice).`);
+  };
+
   return (
     <PageShell
-      title="Analytics & Insights"
-      description="Visual metrics aggregated live from the 5,000 record dataset."
-      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Analytics' }]}
+      title="Threat Analytics & Telemetry"
+      description="Real-time SOC telemetry, time-series trajectory, severity breakdowns, and ranked attack vectors."
+      breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Threat Analytics' }]}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        {/* Reusable FilterBar reusing same interaction pattern */}
+        {/* Global Filter Bar */}
         <FilterBar
-          searchQuery=""
-          onSearchChange={() => {}}
-          searchPlaceholder="Global analytical slice..."
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Filter threat vectors or MITRE tactics..."
           filters={filterGroups}
-          selectedFilters={{ priority: selectedPriority, status: selectedStatus }}
-          onFilterChange={(id, val) => {
-            if (id === 'priority') setSelectedPriority(val);
-            if (id === 'status') setSelectedStatus(val);
-          }}
+          selectedFilters={{ severity: selectedSeverity || '' }}
+          onFilterChange={(_, val) => setSelectedSeverity((val as ThreatSeverity) || null)}
           onResetFilters={() => {
-            setSelectedPriority('');
-            setSelectedStatus('');
+            setSelectedSeverity(null);
+            setSearchQuery('');
           }}
+          actions={
+            <button
+              type="button"
+              onClick={handleExportTelemetry}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                background: 'var(--surface)',
+                color: 'var(--text)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius)',
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              <Download size={14} /> Export Telemetry
+            </button>
+          }
         />
 
-        {/* Summary Metrics */}
+        {/* High-Level SOC Telemetry Summary Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
           <SummaryCard
-            title="Analyzed Records"
-            value={filteredRecords.length.toLocaleString()}
-            subtitle="Matching active slice"
-            icon={<Filter size={18} />}
+            title="TOTAL INBOUND THREATS"
+            value={records.length.toLocaleString()}
+            subtitle="Analyzed across all perimeter sensors"
+            icon={<ShieldAlert size={18} color="#dc2626" />}
           />
           <SummaryCard
-            title="Total Volume Value"
-            value={`$${(totalValue / 1000000).toFixed(2)}M`}
-            subtitle="Cumulative value"
-            icon={<TrendingUp size={18} />}
+            title="CRITICAL THREAT INCIDENTS"
+            value={criticalCount.toLocaleString()}
+            subtitle="Immediate containment priority"
+            icon={<Flame size={18} color="#ea580c" />}
           />
           <SummaryCard
-            title="Average Record Value"
-            value={`$${Math.round(avgValue).toLocaleString()}`}
-            subtitle="Per item average"
-            icon={<BarChart2 size={18} />}
+            title="ACTIVE MONITORED ASSETS"
+            value={`${records.length.toLocaleString()} Systems`}
+            subtitle="Continuous SIEM telemetry ingestion"
+            icon={<ShieldCheck size={18} color="var(--success)" />}
           />
           <SummaryCard
-            title="High / Critical Records"
-            value={highValCount.toLocaleString()}
-            subtitle="Financial evaluation >= $50k"
-            icon={<AlertTriangle size={18} color="#c5221f" />}
+            title="PERIMETER POSTURE SCORE"
+            value="78 / 100"
+            subtitle="+13 pts above industry benchmark"
+            icon={<Activity size={18} color="var(--accent)" />}
           />
         </div>
 
-        {/* Charts Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 20 }}>
-          <ChartCard
-            title="Monthly Creation Volume"
-            subtitle="Aggregated record count over time"
-            data={monthlyTrend}
-            dataKey="count"
-            categoryKey="month"
-            type="line"
+        {/* ── Task 2: Threat Trend Chart & Task 3: Threat Severity Donut ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 20 }}>
+          <ThreatTrendChart
+            data24h={trend24h}
+            data7d={trend7d}
+            data30d={trend30d}
+            onTimeRangeChange={setTimeRange}
           />
-          <ChartCard
-            title="Monthly Portfolio Value ($)"
-            subtitle="Financial total cumulative per month"
-            data={monthlyTrend}
-            dataKey="value"
-            categoryKey="month"
-            type="bar"
+          <ThreatSeverityDonut
+            data={severityDonutData}
+            selectedSeverity={selectedSeverity}
+            onSelectSeverity={setSelectedSeverity}
           />
-          <ChartCard
-            title="Status Proportion"
-            subtitle="Operational breakdown"
-            data={statusDist}
-            dataKey="count"
-            categoryKey="status"
-            type="pie"
-          />
-          <ChartCard
-            title="Money-Based Priority Breakdown"
-            subtitle="Urgency tier concentration derived from valuation"
-            data={priorityDist}
-            dataKey="count"
-            categoryKey="priority"
-            type="bar"
+        </div>
+
+        {/* ── Task 4: Top 10 Threat Types Horizontal Bar Chart ── */}
+        <div>
+          <TopThreatTypesChart
+            data={topThreatTypesData}
+            onSelectThreatType={item => {
+              toast.info(
+                `Threat Vector: ${item.type}`,
+                `MITRE Technique: ${item.techniqueId} · Tactic: ${item.tactic} · Detections: ${item.count.toLocaleString()}`
+              );
+            }}
           />
         </div>
       </div>

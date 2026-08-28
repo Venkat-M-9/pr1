@@ -16,7 +16,7 @@ import { useDataContext } from '@/context/DataContext';
 import { Record as SystemRecord, Status, Priority } from '@/lib/mockData';
 import { toast } from '@/lib/toast';
 import { ColumnDef } from '@tanstack/react-table';
-import { Database, Activity, CheckCircle, AlertTriangle, CheckSquare, Edit3, Trash2, DollarSign } from 'lucide-react';
+import { Database, Activity, CheckCircle, AlertTriangle, CheckSquare, Edit3, Trash2 } from 'lucide-react';
 import styles from './Home.module.css';
 
 export default function HomePage() {

@@ -37,7 +37,7 @@ interface ChartProps {
   height?: number;
 }
 
-const PASTEL_PALETTE = ['#c5221f', '#b06000', '#1e7e34', '#2563eb', '#7d786d'];
+const CYBER_PALETTE = ['#dc2626', '#ea580c', '#d97706', '#2563eb', '#10b981', '#64748b'];
 
 export default function ChartCard({
   title,
@@ -190,7 +190,7 @@ export default function ChartCard({
                   paddingAngle={3}
                 >
                   {data.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={PASTEL_PALETTE[index % PASTEL_PALETTE.length]} />
+                    <Cell key={`cell-${index}`} fill={CYBER_PALETTE[index % CYBER_PALETTE.length]} />
                   ))}
                 </Pie>
                 <Tooltip
