@@ -13,7 +13,8 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { TimeSeriesThreatPoint } from '@/types/cybersecurity';
-import { ShieldAlert, TrendingUp, BarChart2 } from 'lucide-react';
+import { ShieldAlertIcon } from '@/components/ui/CyberIcons';
+import { TrendingUp, BarChart2 } from 'lucide-react';
 import styles from './ThreatTrendChart.module.css';
 
 interface Props {
@@ -54,7 +55,7 @@ export default function ThreatTrendChart({
       <div className={styles.header}>
         <div>
           <div className={styles.titleRow}>
-            <ShieldAlert size={17} color="var(--danger)" />
+            <ShieldAlertIcon size={18} color="var(--danger)" />
             <h3 className={styles.title}>Threat Trend &amp; Attack Trajectory</h3>
           </div>
           <p className={styles.subtitle}>

@@ -15,12 +15,12 @@ import { getThreatTrends, THREAT_TYPES } from '@/lib/cybersecurityData';
 import { ThreatSeverity, TimeSeriesThreatPoint } from '@/types/cybersecurity';
 import { toast } from '@/lib/toast';
 import {
-  ShieldAlert,
-  ShieldCheck,
-  Flame,
-  Activity,
-  Download,
-} from 'lucide-react';
+  ShieldAlertIcon,
+  FlameAlertIcon,
+  ShieldCheckIcon,
+  RadarScanIcon,
+} from '@/components/ui/CyberIcons';
+import { Download } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const { records } = useDataContext();
@@ -171,25 +171,33 @@ export default function AnalyticsPage() {
             title="TOTAL INBOUND THREATS"
             value={records.length.toLocaleString()}
             subtitle="Analyzed across all perimeter sensors"
-            icon={<ShieldAlert size={18} color="#dc2626" />}
+            icon={<ShieldAlertIcon size={20} color="#dc2626" />}
+            iconBg="rgba(220, 38, 38, 0.1)"
+            iconColor="#dc2626"
           />
           <SummaryCard
             title="CRITICAL THREAT INCIDENTS"
             value={criticalCount.toLocaleString()}
             subtitle="Immediate containment priority"
-            icon={<Flame size={18} color="#ea580c" />}
+            icon={<FlameAlertIcon size={20} color="#ea580c" />}
+            iconBg="rgba(234, 88, 12, 0.1)"
+            iconColor="#ea580c"
           />
           <SummaryCard
             title="ACTIVE MONITORED ASSETS"
             value={`${records.length.toLocaleString()} Systems`}
             subtitle="Continuous SIEM telemetry ingestion"
-            icon={<ShieldCheck size={18} color="var(--success)" />}
+            icon={<ShieldCheckIcon size={20} color="#10b981" />}
+            iconBg="rgba(16, 185, 129, 0.1)"
+            iconColor="#10b981"
           />
           <SummaryCard
             title="PERIMETER POSTURE SCORE"
             value="78 / 100"
             subtitle="+13 pts above industry benchmark"
-            icon={<Activity size={18} color="var(--accent)" />}
+            icon={<RadarScanIcon size={20} color="#2563eb" />}
+            iconBg="rgba(37, 99, 235, 0.1)"
+            iconColor="#2563eb"
           />
         </div>
 

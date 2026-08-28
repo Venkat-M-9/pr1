@@ -15,7 +15,12 @@ import { Record as SystemRecord, Status, Priority } from '@/lib/mockData';
 import { FieldSchema } from '@/lib/exportUtils';
 import { toast } from '@/lib/toast';
 import { ColumnDef } from '@tanstack/react-table';
-import { Trash2, Edit3, Database, Activity, CheckSquare } from 'lucide-react';
+import {
+  ShieldAlertIcon,
+  ServerClusterIcon,
+  ActivityPulseIcon,
+} from '@/components/ui/CyberIcons';
+import { Trash2, Edit3, CheckSquare } from 'lucide-react';
 
 export default function DataManagementPage() {
   const { records, importRecords, toggleStarRecord, updateRecord, deleteRecord, deleteRecords, updateRecords, addRecord } = useDataContext();
@@ -251,19 +256,25 @@ export default function DataManagementPage() {
           title="CRITICAL RISK ASSETS"
           value={`${criticalCount} Crown Jewels`}
           subtitle="Assets with Risk Score >= 75 requiring patching"
-          icon={<Activity size={18} color="#dc3545" />}
+          icon={<ShieldAlertIcon size={20} color="#dc2626" />}
+          iconBg="rgba(220, 38, 38, 0.1)"
+          iconColor="#dc2626"
         />
         <SummaryCard
           title="MONITORED ASSETS"
           value={activeFilteredRecords.length.toLocaleString()}
           subtitle="Active infrastructure endpoints under SIEM"
-          icon={<Database size={18} />}
+          icon={<ServerClusterIcon size={20} color="#2563eb" />}
+          iconBg="rgba(37, 99, 235, 0.1)"
+          iconColor="#2563eb"
         />
         <SummaryCard
           title="MEAN ASSET RISK SCORE"
           value={`${Math.round(avgRiskScore)} / 100`}
           subtitle="Composite threat exposure index"
-          icon={<Activity size={18} color="#ea580c" />}
+          icon={<ActivityPulseIcon size={20} color="#ea580c" />}
+          iconBg="rgba(234, 88, 12, 0.1)"
+          iconColor="#ea580c"
         />
       </div>
 

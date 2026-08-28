@@ -3,25 +3,27 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  ShieldAlert,
-  Server,
-  BarChart3,
-  FileText,
+  ShieldAlertIcon,
+  ServerClusterIcon,
+  RadarScanIcon,
+  MitreMatrixIcon,
+  ShieldCheckIcon,
+} from '@/components/ui/CyberIcons';
+import {
   User,
   Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Shield,
   X,
 } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 const NAV_ITEMS = [
-  { label: 'SOC Overview', href: '/', icon: ShieldAlert },
-  { label: 'Asset Management', href: '/data', icon: Server },
-  { label: 'Threat Analytics', href: '/analytics', icon: BarChart3 },
-  { label: 'Audit Reports', href: '/reports', icon: FileText },
+  { label: 'SOC Overview', href: '/', icon: ShieldAlertIcon },
+  { label: 'Asset Management', href: '/data', icon: ServerClusterIcon },
+  { label: 'Threat Analytics', href: '/analytics', icon: RadarScanIcon },
+  { label: 'Audit Reports', href: '/reports', icon: MitreMatrixIcon },
   { label: 'SecOps Profile', href: '/profile', icon: User },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
@@ -50,7 +52,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <div className={styles.header}>
           <div className={styles.logo}>
             <div className={styles.logoIcon}>
-              <Shield size={18} />
+              <ShieldCheckIcon size={18} />
             </div>
             {(!collapsed || mobileOpen) && <span className={styles.brand}>CyberSOC</span>}
           </div>

@@ -11,7 +11,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { ThreatSeverity } from '@/types/cybersecurity';
-import { Flame } from 'lucide-react';
+import { FlameAlertIcon } from '@/components/ui/CyberIcons';
 import styles from './TopThreatTypesChart.module.css';
 
 export interface ThreatTypeItem {
@@ -43,7 +43,7 @@ export default function TopThreatTypesChart({ data, onSelectThreatType }: Props)
       <div className={styles.header}>
         <div>
           <div className={styles.titleRow}>
-            <Flame size={17} color="var(--danger)" />
+            <FlameAlertIcon size={18} color="#ea580c" />
             <h3 className={styles.title}>Top 10 Detected Threat Vectors</h3>
           </div>
           <p className={styles.subtitle}>Most prevalent attack vectors identified across all sensors</p>

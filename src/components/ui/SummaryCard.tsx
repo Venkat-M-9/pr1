@@ -7,14 +7,34 @@ interface Props {
   subtitle?: string;
   icon?: ReactNode;
   trend?: { value: number; label: string };
+  iconColor?: string;
+  iconBg?: string;
 }
 
-export default function SummaryCard({ title, value, subtitle, icon, trend }: Props) {
+export default function SummaryCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  trend,
+  iconColor,
+  iconBg,
+}: Props) {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
         <span className={styles.title}>{title}</span>
-        {icon && <span className={styles.icon}>{icon}</span>}
+        {icon && (
+          <div
+            className={styles.iconBadge}
+            style={{
+              color: iconColor || 'inherit',
+              background: iconBg || 'var(--bg)',
+            }}
+          >
+            {icon}
+          </div>
+        )}
       </div>
       <div className={styles.value}>{value}</div>
       {subtitle && <div className={styles.subtitle}>{subtitle}</div>}

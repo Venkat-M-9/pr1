@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Sector } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { ThreatSeverity } from '@/types/cybersecurity';
-import { PieChart as PieIcon } from 'lucide-react';
+import { MitreMatrixIcon } from '@/components/ui/CyberIcons';
 import styles from './ThreatSeverityDonut.module.css';
 
 export interface SeverityDataPoint {
@@ -18,23 +18,6 @@ interface Props {
   selectedSeverity?: ThreatSeverity | null;
   onSelectSeverity?: (severity: ThreatSeverity | null) => void;
 }
-
-const renderActiveShape = (props: any) => {
-  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
-  return (
-    <g>
-      <Sector
-        cx={cx}
-        cy={cy}
-        innerRadius={innerRadius - 2}
-        outerRadius={outerRadius + 5}
-        startAngle={startAngle}
-        endAngle={endAngle}
-        fill={fill}
-      />
-    </g>
-  );
-};
 
 export default function ThreatSeverityDonut({
   data,
@@ -52,7 +35,7 @@ export default function ThreatSeverityDonut({
       <div className={styles.header}>
         <div>
           <div className={styles.titleRow}>
-            <PieIcon size={17} color="var(--accent)" />
+            <MitreMatrixIcon size={18} color="var(--accent)" />
             <h3 className={styles.title}>Threat Severity Breakdown</h3>
           </div>
           <p className={styles.subtitle}>Volume and proportional distribution by threat impact</p>
