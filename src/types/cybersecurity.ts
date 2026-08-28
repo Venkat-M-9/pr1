@@ -96,6 +96,17 @@ export interface MitreTechniqueItem {
   count: number;
   severity: ThreatSeverity;
   description: string;
+  threatActors?: string[];
+  mitigation?: string;
+  detection?: string;
+  subTechniqueOf?: string;
+}
+
+export interface MitreTacticSummary {
+  tactic: string;
+  techniquesCount: number;
+  totalDetections: number;
+  criticalCount: number;
 }
 
 export interface SecurityPostureDimension {
@@ -105,6 +116,8 @@ export interface SecurityPostureDimension {
   fullMark: number;
   status: 'good' | 'warning' | 'critical';
   description: string;
+  recommendation?: string;
+  frameworkRef?: string;
 }
 
 export interface TimeSeriesThreatPoint {

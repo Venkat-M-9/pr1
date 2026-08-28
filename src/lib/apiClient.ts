@@ -11,6 +11,8 @@ import {
   IncidentTimelinePoint,
   VulnerabilityItem,
   SecurityPostureDimension,
+  MitreTechniqueItem,
+  MitreTacticSummary,
 } from '@/types/cybersecurity';
 
 export interface ThreatTrendsResponse {
@@ -214,4 +216,25 @@ export const cybersecurityApi = {
     if (!res.ok) throw new Error(`Attack sources API error: ${res.statusText}`);
     return res.json();
   },
+
+  // MITRE ATT&CK Techniques
+  async getMitreTechniques(params?: { tactic?: string; severity?: string; search?: string; limit?: number }): Promise<MitreTechniquesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params?.tactic) searchParams.set('tactic', params.tactic);
+    if (params?.severity) searchParams.set('severity', params.severity);
+    if (params?.search) searchParams.set('search', params.search);
+    if (params?.limit) searchParams.set('limit', String(params.limit));
+
+    const res = await fetch(`/api/mitre-techniques?${searchParams.toString()}`);
+    if (!res.ok) throw new Error(`MITRE techniques API error: ${res.statusText}`);
+    return res.json();
+  },
 };
+
+export interface MitreTechniquesResponse {
+  success: boolean;
+  totalDetections: number;
+  totalTechniques: number;
+  tactics: MitreTacticSummary[];
+  data: MitreTechniqueItem[];
+}

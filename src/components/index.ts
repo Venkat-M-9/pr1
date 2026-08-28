@@ -27,6 +27,7 @@ export { default as SummaryCard } from './ui/SummaryCard';
 export { default as CreateRecordModal } from './ui/CreateRecordModal';
 export { default as NotificationPopover } from './ui/NotificationPopover';
 export { default as ToastContainer } from './ui/ToastContainer';
+export { default as TelemetryDrilldownDrawer } from './ui/TelemetryDrilldownDrawer';
 
 /* Chart components */
 export { default as ChartCard } from './charts/ChartCard';
@@ -39,6 +40,8 @@ export { default as AttackSourcesMap } from './charts/AttackSourcesMap';
 export { default as IncidentStatusChart } from './charts/IncidentStatusChart';
 export { default as VulnerabilitySeverityInspector } from './charts/VulnerabilitySeverityInspector';
 export { default as RiskMatrixScatterChart } from './charts/RiskMatrixScatterChart';
+export { default as MitreAttackTechniquesChart } from './charts/MitreAttackTechniquesChart';
+export { default as SecurityPostureSpiderChart } from './charts/SecurityPostureSpiderChart';
 
 /* Curated Vector CyberIcons */
 export * from './ui/CyberIcons';
