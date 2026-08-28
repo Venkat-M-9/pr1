@@ -38,6 +38,7 @@ export { default as AlertsLast7DaysChart } from './charts/AlertsLast7DaysChart';
 export { default as AttackSourcesMap } from './charts/AttackSourcesMap';
 export { default as IncidentStatusChart } from './charts/IncidentStatusChart';
 export { default as VulnerabilitySeverityInspector } from './charts/VulnerabilitySeverityInspector';
+export { default as RiskMatrixScatterChart } from './charts/RiskMatrixScatterChart';
 
 /* Curated Vector CyberIcons */
 export * from './ui/CyberIcons';

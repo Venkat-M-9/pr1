@@ -12,6 +12,7 @@ import {
   AttackSourcesMap,
   IncidentStatusChart,
   VulnerabilitySeverityInspector,
+  RiskMatrixScatterChart,
 } from '@/components';
 import { useDataContext } from '@/context/DataContext';
 import { cybersecurityApi } from '@/lib/apiClient';
@@ -23,7 +24,13 @@ import {
   getIncidentTrends,
   getVulnerabilities,
 } from '@/lib/cybersecurityData';
-import { ThreatSeverity, TimeSeriesThreatPoint, VulnerabilityItem, IncidentTimelinePoint } from '@/types/cybersecurity';
+import {
+  ThreatSeverity,
+  TimeSeriesThreatPoint,
+  VulnerabilityItem,
+  IncidentTimelinePoint,
+  SecurityAsset,
+} from '@/types/cybersecurity';
 import { toast } from '@/lib/toast';
 import {
   ShieldAlertIcon,
@@ -64,12 +71,13 @@ export default function AnalyticsPage() {
   const [apiIncidentsTimeline, setApiIncidentsTimeline] = useState<IncidentTimelinePoint[]>(() => getIncidentTrends());
   const [apiIncidentsSummary, setApiIncidentsSummary] = useState<any>(null);
   const [apiVulnerabilities, setApiVulnerabilities] = useState<VulnerabilityItem[]>(() => getVulnerabilities());
+  const [apiAssets, setApiAssets] = useState<SecurityAsset[]>(() => getSecurityAssets());
 
   // Fetch from real server API routes
   useEffect(() => {
     async function loadApiData() {
       try {
-        const [res24h, res7d, res30d, resSev, resVectors, resAssets, resSources, resIncidents, resVulns] = await Promise.allSettled([
+        const [res24h, res7d, res30d, resSev, resVectors, resAssets, resSources, resIncidents, resVulns, resAllAssets] = await Promise.allSettled([
           cybersecurityApi.getThreatTrends('24h'),
           cybersecurityApi.getThreatTrends('7d'),
           cybersecurityApi.getThreatTrends('30d'),
@@ -79,6 +87,7 @@ export default function AnalyticsPage() {
           cybersecurityApi.getAttackSources(),
           cybersecurityApi.getIncidents(),
           cybersecurityApi.getVulnerabilities(),
+          cybersecurityApi.getAssets({ limit: 100 }),
         ]);
 
         if (res24h.status === 'fulfilled' && res24h.value.data) setTrend24h(res24h.value.data);
@@ -93,6 +102,7 @@ export default function AnalyticsPage() {
           setApiIncidentsSummary(resIncidents.value.summary);
         }
         if (resVulns.status === 'fulfilled' && resVulns.value.data) setApiVulnerabilities(resVulns.value.data);
+        if (resAllAssets.status === 'fulfilled' && resAllAssets.value.data) setApiAssets(resAllAssets.value.data);
       } catch (err) {
         console.error('Failed to fetch from telemetry APIs, using fallback store:', err);
       }
@@ -297,6 +307,19 @@ export default function AnalyticsPage() {
               toast.info(
                 `Inspecting ${vuln.id}`,
                 `CVSS ${vuln.cvssScore.toFixed(1)} · ${vuln.affectedAsset} · ${vuln.title}`
+              );
+            }}
+          />
+        </div>
+
+        {/* ── Task 9: Asset Risk Matrix (Scatter Chart: Likelihood vs. Impact) ── */}
+        <div>
+          <RiskMatrixScatterChart
+            data={apiAssets}
+            onSelectAsset={asset => {
+              toast.info(
+                `Asset Risk Profile: ${asset.name}`,
+                `FAIR Score: ${asset.riskScore}/100 · Likelihood: ${asset.likelihood}% · Impact: ${asset.impact}% · ${asset.vulnerabilityCount} Vulnerabilities`
               );
             }}
           />
