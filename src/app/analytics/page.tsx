@@ -271,25 +271,26 @@ export default function AnalyticsPage() {
           />
         </div>
 
-        {/* ── Task 6: Attack Sources Map & Task 7: Incident Status ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 20 }}>
+        {/* ── Task 6: Full-Width Flagship Hero Section: Attack Sources Geopolitical Map ── */}
+        <div>
           <AttackSourcesMap
             data={apiAttackSources}
             onSelectCountry={country => {
+              const displayName = country.name || country.country || country.code;
               toast.info(
-                `Origin: ${country.name} (${country.code})`,
-                `Inbound Intrusion Attempts: ${country.count.toLocaleString()} (${country.share}% global share)`
+                `Origin: ${displayName} (${country.code})`,
+                `Inbound Intrusion Attempts: ${country.count.toLocaleString()} (${country.share ?? country.percentage}% global share)`
               );
             }}
           />
+        </div>
+
+        {/* ── Task 7: Incident Status Timeline & Task 8: CVSS 3.1 Inspector ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 20 }}>
           <IncidentStatusChart
             data={apiIncidentsTimeline}
             summary={apiIncidentsSummary}
           />
-        </div>
-
-        {/* ── Task 8: Vulnerability Severity & CVSS 3.1 Vector Inspector ── */}
-        <div>
           <VulnerabilitySeverityInspector
             data={apiVulnerabilities}
             onSelectVulnerability={vuln => {
