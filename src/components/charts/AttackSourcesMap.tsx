@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { AttackGlobeIcon } from '@/components/ui/CyberIcons';
+import { WORLD_LAND_PATH, projectCoordinates } from '@/lib/geo/worldData';
 import styles from './AttackSourcesMap.module.css';
 
 export interface AttackCountryItem {
@@ -19,32 +20,42 @@ interface Props {
   onSelectCountry?: (country: AttackCountryItem) => void;
 }
 
-// Coordinate anchors for key global cybersecurity hubs on a 1000 x 500 projection
-const HUB_COORDINATES: Record<string, { cx: number; cy: number; rings: number; label: string }> = {
-  US_WEST: { cx: 165, cy: 155, rings: 3, label: 'US-West' },
-  US_EAST: { cx: 270, cy: 160, rings: 4, label: 'US-East' },
-  SA_BRAZIL: { cx: 375, cy: 375, rings: 3, label: 'Brazil' },
-  EU_WEST: { cx: 520, cy: 135, rings: 4, label: 'W-Europe' },
-  EU_EAST: { cx: 585, cy: 120, rings: 3, label: 'E-Europe' },
-  ME_GULF: { cx: 625, cy: 200, rings: 3, label: 'Mid-East' },
-  ASIA_EAST: { cx: 805, cy: 195, rings: 5, label: 'East Asia' },
-  ASIA_SE: { cx: 770, cy: 275, rings: 2, label: 'SE-Asia' },
-  AU_SYDNEY: { cx: 875, cy: 415, rings: 3, label: 'Australia' },
-  AFRICA_WEST: { cx: 480, cy: 265, rings: 2, label: 'W-Africa' },
+// Real geographic [lon, lat] coordinates for key global cybersecurity hubs
+const HUB_DEFINITIONS: Record<string, { lon: number; lat: number; rings: number; label: string }> = {
+  US_WEST: { lon: -122.4, lat: 37.7, rings: 3, label: 'US-West Coast' },
+  US_EAST: { lon: -77.0, lat: 38.9, rings: 4, label: 'US-East Coast' },
+  SA_BRAZIL: { lon: -46.6, lat: -23.5, rings: 3, label: 'Brazil Hub' },
+  EU_WEST: { lon: 2.35, lat: 48.85, rings: 4, label: 'Western Europe' },
+  EU_EAST: { lon: 37.6, lat: 55.75, rings: 3, label: 'Eastern Europe / RU' },
+  ME_GULF: { lon: 51.4, lat: 25.3, rings: 3, label: 'Middle East Hub' },
+  ASIA_SOUTH: { lon: 77.2, lat: 28.6, rings: 3, label: 'South Asia (India)' },
+  ASIA_EAST: { lon: 116.4, lat: 39.9, rings: 5, label: 'East Asia Epicenter' },
+  ASIA_SE: { lon: 103.8, lat: 1.35, rings: 2, label: 'Southeast Asia' },
+  AU_SYDNEY: { lon: 151.2, lat: -33.8, rings: 3, label: 'Australia / Oceania' },
+  AFRICA_WEST: { lon: 3.37, lat: 6.52, rings: 2, label: 'West Africa' },
 };
+
+// Compute pixel coordinates via cartographic projection
+const HUB_COORDINATES: Record<string, { cx: number; cy: number; rings: number; label: string }> = Object.fromEntries(
+  Object.entries(HUB_DEFINITIONS).map(([key, hub]) => {
+    const [cx, cy] = projectCoordinates(hub.lon, hub.lat);
+    return [key, { cx, cy, rings: hub.rings, label: hub.label }];
+  })
+);
 
 // Major intercontinental cyber attack arcs connecting the hubs (matching reference image)
 const INTER_HUB_ARCS = [
   { from: 'ASIA_EAST', to: 'US_EAST', height: -80 },
+  { from: 'ASIA_EAST', to: 'US_WEST', height: -65 },
   { from: 'ASIA_EAST', to: 'EU_WEST', height: -60 },
   { from: 'ASIA_EAST', to: 'AU_SYDNEY', height: 40 },
   { from: 'EU_EAST', to: 'US_EAST', height: -70 },
   { from: 'EU_WEST', to: 'SA_BRAZIL', height: -40 },
   { from: 'EU_WEST', to: 'ME_GULF', height: 20 },
   { from: 'US_EAST', to: 'US_WEST', height: 20 },
-  { from: 'US_WEST', to: 'ASIA_EAST', height: -75 },
   { from: 'ME_GULF', to: 'AFRICA_WEST', height: 30 },
   { from: 'SA_BRAZIL', to: 'US_EAST', height: 30 },
+  { from: 'ASIA_SOUTH', to: 'EU_WEST', height: -45 },
   { from: 'ASIA_SE', to: 'ASIA_EAST', height: 15 },
   { from: 'AU_SYDNEY', to: 'US_WEST', height: 80 },
 ];
@@ -71,7 +82,7 @@ export default function AttackSourcesMap({ data, onSelectCountry }: Props) {
             <h3 className={styles.title}>Attack Sources &amp; Geopolitical Origins</h3>
           </div>
           <p className={styles.subtitle}>
-            Global threat telemetry, multi-ring intrusion epicenters, and intercontinental attack vectors
+            Cartographic global threat telemetry, multi-ring intrusion epicenters, and intercontinental attack vectors
           </p>
         </div>
 
@@ -88,74 +99,11 @@ export default function AttackSourcesMap({ data, onSelectCountry }: Props) {
           viewBox="0 0 1000 500"
           preserveAspectRatio="xMidYMid meet"
         >
-          {/* Detailed World Continents SVG Paths (Matching Reference Image 1 & 2) */}
-          <g className={styles.continentsGroup}>
-            {/* North America */}
-            <path
-              className={styles.landmass}
-              d="M 125,60 C 135,55 170,50 200,65 C 230,75 270,60 300,75 C 330,85 350,110 320,135 C 290,155 300,185 285,215 C 275,235 240,245 220,230 C 200,215 160,210 135,175 C 115,150 95,115 110,85 Z"
-            />
-            {/* Greenland */}
-            <path
-              className={styles.landmass}
-              d="M 330,45 C 355,30 395,35 410,55 C 415,75 390,100 365,95 C 345,90 320,65 330,45 Z"
-            />
-            {/* South America */}
-            <path
-              className={styles.landmass}
-              d="M 275,245 C 305,240 355,260 385,310 C 405,350 375,410 340,465 C 315,480 295,450 290,390 C 285,340 260,290 275,245 Z"
-            />
-            {/* Europe */}
-            <path
-              className={styles.landmass}
-              d="M 465,75 C 490,65 540,60 575,85 C 595,105 570,145 540,165 C 510,180 470,165 455,135 C 445,110 450,90 465,75 Z"
-            />
-            {/* Scandinavia & UK */}
-            <path
-              className={styles.landmass}
-              d="M 445,85 C 455,75 470,75 475,95 C 465,110 445,110 445,85 Z M 495,45 C 520,35 545,45 535,75 C 520,85 490,65 495,45 Z"
-            />
-            {/* Africa */}
-            <path
-              className={styles.landmass}
-              d="M 455,170 C 495,160 560,165 580,215 C 600,265 585,335 550,395 C 525,430 495,385 475,325 C 455,275 435,215 455,170 Z"
-            />
-            {/* Madagascar */}
-            <path
-              className={styles.landmass}
-              d="M 605,345 C 615,340 620,365 615,385 C 605,395 595,375 605,345 Z"
-            />
-            {/* Asia & Russia */}
-            <path
-              className={styles.landmass}
-              d="M 580,65 C 650,45 780,40 885,85 C 935,110 910,165 865,200 C 825,230 805,280 755,285 C 715,280 695,245 665,230 C 635,215 585,185 580,145 Z"
-            />
-            {/* Indian Subcontinent */}
-            <path
-              className={styles.landmass}
-              d="M 660,205 C 695,200 735,225 725,275 C 705,300 675,300 660,255 Z"
-            />
-            {/* Japan & Korean Peninsula */}
-            <path
-              className={styles.landmass}
-              d="M 865,145 C 885,140 895,175 885,205 C 875,215 860,185 865,145 Z"
-            />
-            {/* Southeast Asia & Indonesia */}
-            <path
-              className={styles.landmass}
-              d="M 755,275 C 785,270 825,290 815,325 C 795,345 765,335 755,305 Z M 835,315 C 865,315 875,345 845,355 Z"
-            />
-            {/* Australia */}
-            <path
-              className={styles.landmass}
-              d="M 815,365 C 865,345 925,355 935,405 C 925,445 875,465 835,445 C 805,425 795,385 815,365 Z"
-            />
-            {/* New Zealand */}
-            <path
-              className={styles.landmass}
-              d="M 945,435 C 965,430 970,455 955,475 C 945,480 935,455 945,435 Z"
-            />
-          </g>
+          {/* Authentic Cartographic Natural Earth Landmass (Matching Reference Image 1) */}
+          <path
+            d={WORLD_LAND_PATH}
+            className={styles.landmass}
+          />
 
           {/* Inter-Hub Smooth Curved Attack Arcs (Matching Reference Image 1) */}
           <g className={styles.arcsGroup}>
@@ -201,7 +149,7 @@ export default function AttackSourcesMap({ data, onSelectCountry }: Props) {
                         cy={hub.cy}
                         r={radius}
                         className={styles.epicenterRing}
-                        strokeWidth={isHovered ? 1.5 : 1}
+                        strokeWidth={isHovered ? 1.6 : 1}
                       />
                     );
                   })}
@@ -214,19 +162,31 @@ export default function AttackSourcesMap({ data, onSelectCountry }: Props) {
                     className={styles.epicenterRingCenter}
                   />
 
-                  {/* Node Label */}
+                  {/* Node Label on hover */}
                   {isHovered && (
-                    <text
-                      x={hub.cx}
-                      y={hub.cy - (hub.rings * 7.5) - 6}
-                      fill="#ffffff"
-                      fontSize="10"
-                      fontWeight="700"
-                      textAnchor="middle"
-                      fontFamily="var(--font-mono, monospace)"
-                    >
-                      {hub.label}
-                    </text>
+                    <g>
+                      <rect
+                        x={hub.cx - 50}
+                        y={hub.cy - (hub.rings * 7.5) - 22}
+                        width={100}
+                        height={18}
+                        rx={4}
+                        fill="rgba(15, 23, 42, 0.95)"
+                        stroke="rgba(255, 255, 255, 0.2)"
+                        strokeWidth={0.8}
+                      />
+                      <text
+                        x={hub.cx}
+                        y={hub.cy - (hub.rings * 7.5) - 10}
+                        fill="#ffffff"
+                        fontSize="9"
+                        fontWeight="700"
+                        textAnchor="middle"
+                        fontFamily="var(--font-mono, monospace)"
+                      >
+                        {hub.label}
+                      </text>
+                    </g>
                   )}
                 </g>
               );
