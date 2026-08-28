@@ -36,6 +36,11 @@ export default function SecurityPostureSpiderChart({ data, onSelectDimension }: 
 
   const delta = overallCurrent - overallBenchmark;
 
+  const maxMark = useMemo(() => {
+    if (!data.length) return 100;
+    return Math.max(...data.map(d => d.fullMark || 100), 100);
+  }, [data]);
+
   const handleSelect = (dim: SecurityPostureDimension) => {
     setSelectedAxis(dim.axis);
     onSelectDimension?.(dim);
@@ -104,7 +109,7 @@ export default function SecurityPostureSpiderChart({ data, onSelectDimension }: 
               />
               <PolarRadiusAxis
                 angle={90}
-                domain={[0, 100]}
+                domain={[0, maxMark]}
                 stroke="var(--border)"
                 tick={{ fill: 'var(--text-muted)', fontSize: 9 }}
               />

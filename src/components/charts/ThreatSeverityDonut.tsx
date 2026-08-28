@@ -28,7 +28,9 @@ export default function ThreatSeverityDonut({
 
   const total = data.reduce((acc, d) => acc + d.count, 0);
 
-  const activeItem = activeIndex !== null ? data[activeIndex] : null;
+  const selectedIndex = data.findIndex(d => d.severity === selectedSeverity);
+  const effectiveIndex = activeIndex !== null ? activeIndex : (selectedIndex >= 0 ? selectedIndex : null);
+  const activeItem = effectiveIndex !== null ? data[effectiveIndex] : null;
 
   return (
     <div className={styles.card}>

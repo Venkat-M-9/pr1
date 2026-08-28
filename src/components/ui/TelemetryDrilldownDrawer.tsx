@@ -118,7 +118,7 @@ export default function TelemetryDrilldownDrawer({ open, onClose, entity }: Prop
                 {data.riskScore ?? data.cvssScore ?? data.current}
               </span>
               <span className={styles.scoreLabel}>
-                {data.cvssScore ? 'CVSS' : data.current ? 'SCORE' : 'FAIR'}
+                {data.cvssScore !== undefined ? 'CVSS' : data.current !== undefined ? 'POSTURE' : 'FAIR'}
               </span>
             </div>
           )}

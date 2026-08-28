@@ -128,21 +128,45 @@ export default function MitreAttackTechniquesChart({ data, onSelectTechnique }: 
           })}
         </div>
 
-        <div className={styles.viewModeToggle}>
-          <button
-            type="button"
-            className={`${styles.toggleBtn} ${viewMode === 'bar' ? styles.toggleBtnActive : ''}`}
-            onClick={() => setViewMode('bar')}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <select
+            value={selectedSeverity}
+            onChange={e => setSelectedSeverity(e.target.value)}
+            aria-label="Filter techniques by severity"
+            style={{
+              padding: '5px 10px',
+              fontSize: 11,
+              fontWeight: 600,
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border)',
+              background: 'var(--surface)',
+              color: 'var(--text)',
+              cursor: 'pointer',
+            }}
           >
-            Ranked Bar
-          </button>
-          <button
-            type="button"
-            className={`${styles.toggleBtn} ${viewMode === 'matrix' ? styles.toggleBtnActive : ''}`}
-            onClick={() => setViewMode('matrix')}
-          >
-            Kill Chain Matrix
-          </button>
+            <option value="all">All Severities</option>
+            <option value="critical">Critical Severity</option>
+            <option value="high">High Severity</option>
+            <option value="medium">Medium Severity</option>
+            <option value="low">Low Severity</option>
+          </select>
+
+          <div className={styles.viewModeToggle}>
+            <button
+              type="button"
+              className={`${styles.toggleBtn} ${viewMode === 'bar' ? styles.toggleBtnActive : ''}`}
+              onClick={() => setViewMode('bar')}
+            >
+              Ranked Bar
+            </button>
+            <button
+              type="button"
+              className={`${styles.toggleBtn} ${viewMode === 'matrix' ? styles.toggleBtnActive : ''}`}
+              onClick={() => setViewMode('matrix')}
+            >
+              Kill Chain Matrix
+            </button>
+          </div>
         </div>
       </div>
 

@@ -322,7 +322,7 @@ export default function AnalyticsPage() {
           }}
         >
           {[
-            { id: 'all', label: 'All Telemetry (12 Widgets)' },
+            { id: 'all', label: 'All Telemetry (Full Suite)' },
             { id: 'threats', label: 'Threat Trends & Vectors' },
             { id: 'map', label: 'Geopolitical Defense Map' },
             { id: 'assets', label: 'Assets & Risk Matrix' },

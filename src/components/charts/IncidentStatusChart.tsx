@@ -14,6 +14,8 @@ import { ShieldAlertIcon } from '@/components/ui/CyberIcons';
 import { IncidentTimelinePoint } from '@/types/cybersecurity';
 import styles from './IncidentStatusChart.module.css';
 
+import { useState } from 'react';
+
 interface Props {
   data: IncidentTimelinePoint[];
   summary?: {
@@ -23,15 +25,26 @@ interface Props {
     contained: number;
     resolved: number;
   };
+  onSelectPeriod?: (point: IncidentTimelinePoint) => void;
 }
 
-export default function IncidentStatusChart({ data, summary }: Props) {
+export default function IncidentStatusChart({ data, summary, onSelectPeriod }: Props) {
+  const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null);
+
   const totals = summary || {
     total: data.reduce((acc, d) => acc + d.open + d.investigating + d.contained + d.resolved, 0),
     open: data[data.length - 1]?.open ?? 3,
     investigating: data[data.length - 1]?.investigating ?? 5,
     contained: data[data.length - 1]?.contained ?? 8,
     resolved: data[data.length - 1]?.resolved ?? 18,
+  };
+
+  const handleBarClick = (entry: any) => {
+    const payload = entry?.payload || entry;
+    if (payload) {
+      setSelectedPeriod(payload.timestamp || payload.timeLabel);
+      onSelectPeriod?.(payload);
+    }
   };
 
   return (
@@ -126,10 +139,10 @@ export default function IncidentStatusChart({ data, summary }: Props) {
               iconType="circle"
               wrapperStyle={{ fontSize: 12, color: 'var(--text-muted)', paddingTop: 8 }}
             />
-            <Bar dataKey="resolved" name="Resolved" stackId="incidents" fill="#10b981" />
-            <Bar dataKey="contained" name="Contained" stackId="incidents" fill="#3b82f6" />
-            <Bar dataKey="investigating" name="Investigating" stackId="incidents" fill="#f97316" />
-            <Bar dataKey="open" name="Open" stackId="incidents" fill="#ef4444" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="resolved" name="Resolved" stackId="incidents" fill="#10b981" onClick={handleBarClick} cursor="pointer" />
+            <Bar dataKey="contained" name="Contained" stackId="incidents" fill="#3b82f6" onClick={handleBarClick} cursor="pointer" />
+            <Bar dataKey="investigating" name="Investigating" stackId="incidents" fill="#f97316" onClick={handleBarClick} cursor="pointer" />
+            <Bar dataKey="open" name="Open" stackId="incidents" fill="#ef4444" radius={[4, 4, 0, 0]} onClick={handleBarClick} cursor="pointer" />
           </BarChart>
         </ResponsiveContainer>
       </div>

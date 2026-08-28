@@ -31,6 +31,54 @@ const SERIES_CONFIG = [
   { key: 'low', label: 'Low', color: '#2563eb', gradientId: 'grad-low' },
 ];
 
+interface TooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+}
+
+function TrendCustomTooltip({ active, payload, label }: TooltipProps) {
+  if (active && payload && payload.length) {
+    const totalPoint = payload.reduce((acc, p) => acc + Number(p.value || 0), 0);
+    return (
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border-strong)',
+          padding: '10px 14px',
+          borderRadius: 'var(--radius)',
+          boxShadow: 'var(--shadow)',
+          fontSize: '12px',
+          minWidth: 170,
+        }}
+      >
+        <div style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 6, borderBottom: '1px solid var(--border)', paddingBottom: 4 }}>
+          Time: {label} ({totalPoint.toLocaleString()} threats)
+        </div>
+        {payload.map((p: any) => (
+          <div
+            key={p.name}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              marginTop: 4,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
+              <span style={{ color: 'var(--text-muted)' }}>{p.name}:</span>
+            </div>
+            <strong style={{ color: 'var(--text)' }}>{Number(p.value).toLocaleString()}</strong>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
 export default function ThreatTrendChart({
   data24h,
   data7d,
@@ -141,49 +189,7 @@ export default function ThreatTrendChart({
                 dy={6}
               />
               <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} dx={-4} />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const totalPoint = payload.reduce((acc, p) => acc + Number(p.value || 0), 0);
-                    return (
-                      <div
-                        style={{
-                          background: 'var(--surface)',
-                          border: '1px solid var(--border-strong)',
-                          padding: '10px 14px',
-                          borderRadius: 'var(--radius)',
-                          boxShadow: 'var(--shadow)',
-                          fontSize: '12px',
-                          minWidth: 170,
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 6, borderBottom: '1px solid var(--border)', paddingBottom: 4 }}>
-                          Time: {label} ({totalPoint} threats)
-                        </div>
-                        {payload.map((p: any) => (
-                          <div
-                            key={p.name}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              gap: 12,
-                              marginTop: 4,
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
-                              <span style={{ color: 'var(--text-muted)' }}>{p.name}:</span>
-                            </div>
-                            <strong style={{ color: 'var(--text)' }}>{Number(p.value).toLocaleString()}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
+              <Tooltip content={<TrendCustomTooltip />} />
               {SERIES_CONFIG.map(s => (
                 <Area
                   key={s.key}
@@ -202,49 +208,7 @@ export default function ThreatTrendChart({
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.6} />
               <XAxis dataKey="timeLabel" stroke="var(--text-muted)" fontSize={11} tickLine={false} dy={6} />
               <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} dx={-4} />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const totalPoint = payload.reduce((acc, p) => acc + Number(p.value || 0), 0);
-                    return (
-                      <div
-                        style={{
-                          background: 'var(--surface)',
-                          border: '1px solid var(--border-strong)',
-                          padding: '10px 14px',
-                          borderRadius: 'var(--radius)',
-                          boxShadow: 'var(--shadow)',
-                          fontSize: '12px',
-                          minWidth: 170,
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, color: 'var(--text)', marginBottom: 6, borderBottom: '1px solid var(--border)', paddingBottom: 4 }}>
-                          Time: {label} ({totalPoint} threats)
-                        </div>
-                        {payload.map((p: any) => (
-                          <div
-                            key={p.name}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              gap: 12,
-                              marginTop: 4,
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
-                              <span style={{ color: 'var(--text-muted)' }}>{p.name}:</span>
-                            </div>
-                            <strong style={{ color: 'var(--text)' }}>{Number(p.value).toLocaleString()}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
+              <Tooltip content={<TrendCustomTooltip />} />
               {SERIES_CONFIG.map(s => (
                 <Line
                   key={s.key}

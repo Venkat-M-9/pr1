@@ -149,8 +149,8 @@ export default function RiskMatrixScatterChart({ data, onSelectAsset }: Props) {
             <option value="all">All Quadrants</option>
             <option value="q1">Q1: Critical Risk (Likelihood ≥50 &amp; Impact ≥50)</option>
             <option value="q2">Q2: High Impact Catastrophic (Likelihood &lt;50 &amp; Impact ≥50)</option>
-            <option value="q4">Q4: Operational Friction (Likelihood ≥50 &amp; Impact &lt;50)</option>
             <option value="q3">Q3: Low Risk Zone (Likelihood &lt;50 &amp; Impact &lt;50)</option>
+            <option value="q4">Q4: Operational Friction (Likelihood ≥50 &amp; Impact &lt;50)</option>
           </select>
         </div>
       </div>

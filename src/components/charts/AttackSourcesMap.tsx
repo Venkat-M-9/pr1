@@ -10,6 +10,7 @@ export interface AttackCountryItem {
   name?: string;
   country?: string;
   count: number;
+  criticalCount?: number;
   share?: number;
   percentage?: number;
   primaryThreat?: string;
@@ -210,7 +211,14 @@ export default function AttackSourcesMap({ data, onSelectCountry }: Props) {
                     <span className={styles.hudFlag}>{c.code}</span>
                     <span className={styles.hudName}>{name}</span>
                   </div>
-                  <span className={styles.hudValue}>{c.count.toLocaleString()} <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>({share}%)</span></span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {c.criticalCount !== undefined && (
+                      <span style={{ fontSize: 10, color: '#ef4444', fontWeight: 600, background: 'rgba(239, 68, 68, 0.1)', padding: '1px 5px', borderRadius: 3 }}>
+                        {c.criticalCount} crit
+                      </span>
+                    )}
+                    <span className={styles.hudValue}>{c.count.toLocaleString()} <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>({share}%)</span></span>
+                  </div>
                 </div>
               );
             })}

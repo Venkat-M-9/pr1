@@ -498,8 +498,8 @@ export function getThreatTrends(timeRange: '24h' | '7d' | '30d'): TimeSeriesThre
       const hour = `${i.toString().padStart(2, '0')}:00`;
       const critical = Math.floor(Math.sin((i / 24) * Math.PI * 2) * 5 + 8 + (i % 3));
       const high = Math.floor(Math.cos((i / 24) * Math.PI * 2) * 10 + 18 + (i % 4));
-      const medium = Math.floor(15 + Math.random() * 8 + (i % 5));
-      const low = Math.floor(25 + Math.random() * 12);
+      const medium = Math.floor(15 + Math.sin(i * 1.5) * 4 + (i % 5));
+      const low = Math.floor(25 + Math.cos(i * 1.1) * 6 + ((i * 2) % 7));
       return {
         timeLabel: hour,
         timestamp: hour,
@@ -518,8 +518,8 @@ export function getThreatTrends(timeRange: '24h' | '7d' | '30d'): TimeSeriesThre
     return days.map((day, i) => {
       const critical = Math.floor(18 + Math.sin(i) * 8 + (i === 3 ? 15 : 0));
       const high = Math.floor(45 + Math.cos(i) * 14 + (i === 4 ? 20 : 0));
-      const medium = Math.floor(65 + Math.random() * 15);
-      const low = Math.floor(95 + Math.random() * 25);
+      const medium = Math.floor(65 + Math.sin(i * 0.8) * 10 + (i % 4) * 3);
+      const low = Math.floor(95 + Math.cos(i * 0.9) * 15 + (i % 3) * 5);
       return {
         timeLabel: day,
         timestamp: `Day ${i + 1}`,
@@ -535,10 +535,10 @@ export function getThreatTrends(timeRange: '24h' | '7d' | '30d'): TimeSeriesThre
   // 30 days -> daily / weekly points (4 weeks)
   const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
   return weeks.map((week, i) => {
-    const critical = 120 + i * 25 + Math.floor(Math.random() * 20);
-    const high = 340 + i * 40 + Math.floor(Math.random() * 30);
-    const medium = 580 + i * 50 + Math.floor(Math.random() * 40);
-    const low = 820 + i * 60 + Math.floor(Math.random() * 50);
+    const critical = 120 + i * 25 + ((i * 7) % 15);
+    const high = 340 + i * 40 + ((i * 11) % 20);
+    const medium = 580 + i * 50 + ((i * 13) % 25);
+    const low = 820 + i * 60 + ((i * 17) % 35);
     return {
       timeLabel: week,
       timestamp: week,
@@ -556,10 +556,10 @@ export function getThreatTrends(timeRange: '24h' | '7d' | '30d'): TimeSeriesThre
 export function getIncidentTrends(): IncidentTimelinePoint[] {
   const periods = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
   return periods.map((period, i) => {
-    const open = Math.floor(12 + Math.random() * 6);
-    const investigating = Math.floor(18 + Math.random() * 8);
-    const contained = Math.floor(25 + Math.random() * 10);
-    const resolved = Math.floor(45 + i * 12 + Math.random() * 8);
+    const open = Math.floor(12 + Math.sin(i) * 3 + (i % 2));
+    const investigating = Math.floor(18 + Math.cos(i) * 4 + (i % 3));
+    const contained = Math.floor(25 + Math.sin(i * 1.2) * 5 + (i % 4));
+    const resolved = Math.floor(45 + i * 12 + ((i * 3) % 7));
     return {
       timeLabel: period,
       timestamp: period,

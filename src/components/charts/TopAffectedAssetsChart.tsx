@@ -38,11 +38,23 @@ const getAssetColor = (riskScore: number) => {
   return '#3b82f6';
 };
 
+import { useState } from 'react';
+
 export default function TopAffectedAssetsChart({ data, onSelectAsset }: Props) {
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+
   // Sort descending by security events and cap at Top 10
   const sortedData = [...data]
     .sort((a, b) => b.securityEvents - a.securityEvents)
     .slice(0, 10);
+
+  const handleBarClick = (item: any) => {
+    const payload = item?.payload || item;
+    if (payload) {
+      setSelectedAssetId(payload.id);
+      onSelectAsset?.(payload);
+    }
+  };
 
   return (
     <div className={styles.card}>
@@ -74,8 +86,24 @@ export default function TopAffectedAssetsChart({ data, onSelectAsset }: Props) {
               stroke="var(--text-muted)"
               fontSize={11}
               tickLine={false}
-              width={160}
-              tick={{ fill: 'var(--text)' }}
+              width={180}
+              tick={({ x, y, payload }) => {
+                const text = payload.value.length > 22 ? `${payload.value.slice(0, 20)}…` : payload.value;
+                return (
+                  <g transform={`translate(${x},${y})`}>
+                    <text
+                      x={-10}
+                      y={4}
+                      textAnchor="end"
+                      fill="var(--text)"
+                      fontSize="11"
+                      fontWeight="500"
+                    >
+                      {text}
+                    </text>
+                  </g>
+                );
+              }}
             />
             <Tooltip
               content={({ active, payload }) => {
@@ -132,15 +160,22 @@ export default function TopAffectedAssetsChart({ data, onSelectAsset }: Props) {
             <Bar
               dataKey="securityEvents"
               radius={[0, 4, 4, 0]}
-              onClick={item => {
-                const payload = (item as any)?.payload || item;
-                if (payload) onSelectAsset?.(payload);
-              }}
+              onClick={handleBarClick}
               cursor="pointer"
             >
-              {sortedData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getAssetColor(entry.riskScore)} />
-              ))}
+              {sortedData.map((entry, index) => {
+                const color = getAssetColor(entry.riskScore);
+                const isSelected = selectedAssetId === entry.id;
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={color}
+                    fillOpacity={selectedAssetId && !isSelected ? 0.45 : 1}
+                    stroke={isSelected ? '#ffffff' : color}
+                    strokeWidth={isSelected ? 2 : 0}
+                  />
+                );
+              })}
             </Bar>
           </BarChart>
         </ResponsiveContainer>

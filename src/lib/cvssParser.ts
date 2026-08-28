@@ -2,13 +2,14 @@ import { CVSSBreakdown, ThreatSeverity } from '@/types/cybersecurity';
 
 export function parseCVSSVector(vectorString: string, baseScore: number = 7.5): CVSSBreakdown {
   const cleanVector = vectorString.trim();
-  const parts = cleanVector.split('/');
+  const metricsVector = cleanVector.replace(/^CVSS:\d+\.\d+\//i, '');
+  const parts = metricsVector.split('/');
   
   const metricMap: Record<string, string> = {};
   parts.forEach(part => {
     const [key, val] = part.split(':');
     if (key && val) {
-      metricMap[key] = val;
+      metricMap[key.trim().toUpperCase()] = val.trim().toUpperCase();
     }
   });
 

@@ -34,9 +34,21 @@ const SEVERITY_COLORS: Record<ThreatSeverity, string> = {
   low: '#2563eb',
 };
 
+import { useState } from 'react';
+
 export default function TopThreatTypesChart({ data, onSelectThreatType }: Props) {
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+
   // Sort descending and cap at Top 10
   const sortedData = [...data].sort((a, b) => b.count - a.count).slice(0, 10);
+
+  const handleBarClick = (item: any) => {
+    const payload = item?.payload || item;
+    if (payload) {
+      setSelectedType(payload.type);
+      onSelectThreatType?.(payload);
+    }
+  };
 
   return (
     <div className={styles.card}>
@@ -117,15 +129,22 @@ export default function TopThreatTypesChart({ data, onSelectThreatType }: Props)
             <Bar
               dataKey="count"
               radius={[0, 4, 4, 0]}
-              onClick={item => {
-                const payload = (item as any)?.payload || item;
-                if (payload) onSelectThreatType?.(payload);
-              }}
+              onClick={handleBarClick}
               cursor="pointer"
             >
-              {sortedData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={SEVERITY_COLORS[entry.severity] || '#2563eb'} />
-              ))}
+              {sortedData.map((entry, index) => {
+                const color = SEVERITY_COLORS[entry.severity] || '#2563eb';
+                const isSelected = selectedType === entry.type;
+                return (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={color}
+                    fillOpacity={selectedType && !isSelected ? 0.45 : 1}
+                    stroke={isSelected ? '#ffffff' : color}
+                    strokeWidth={isSelected ? 2 : 0}
+                  />
+                );
+              })}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
