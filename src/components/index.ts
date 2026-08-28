@@ -35,6 +35,9 @@ export { default as ThreatSeverityDonut } from './charts/ThreatSeverityDonut';
 export { default as TopThreatTypesChart } from './charts/TopThreatTypesChart';
 export { default as TopAffectedAssetsChart } from './charts/TopAffectedAssetsChart';
 export { default as AlertsLast7DaysChart } from './charts/AlertsLast7DaysChart';
+export { default as AttackSourcesMap } from './charts/AttackSourcesMap';
+export { default as IncidentStatusChart } from './charts/IncidentStatusChart';
+export { default as VulnerabilitySeverityInspector } from './charts/VulnerabilitySeverityInspector';
 
 /* Curated Vector CyberIcons */
 export * from './ui/CyberIcons';

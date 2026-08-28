@@ -9,11 +9,21 @@ import {
   ThreatSeverityDonut,
   TopThreatTypesChart,
   TopAffectedAssetsChart,
+  AttackSourcesMap,
+  IncidentStatusChart,
+  VulnerabilitySeverityInspector,
 } from '@/components';
 import { useDataContext } from '@/context/DataContext';
 import { cybersecurityApi } from '@/lib/apiClient';
-import { getThreatTrends, THREAT_TYPES, getSecurityAssets } from '@/lib/cybersecurityData';
-import { ThreatSeverity, TimeSeriesThreatPoint } from '@/types/cybersecurity';
+import {
+  getThreatTrends,
+  THREAT_TYPES,
+  getSecurityAssets,
+  getAttackSourceCountries,
+  getIncidentTrends,
+  getVulnerabilities,
+} from '@/lib/cybersecurityData';
+import { ThreatSeverity, TimeSeriesThreatPoint, VulnerabilityItem, IncidentTimelinePoint } from '@/types/cybersecurity';
 import { toast } from '@/lib/toast';
 import {
   ShieldAlertIcon,
@@ -50,18 +60,25 @@ export default function AnalyticsPage() {
       status: a.status,
     })).sort((a, b) => b.securityEvents - a.securityEvents).slice(0, 10);
   });
+  const [apiAttackSources, setApiAttackSources] = useState<any[]>(() => getAttackSourceCountries());
+  const [apiIncidentsTimeline, setApiIncidentsTimeline] = useState<IncidentTimelinePoint[]>(() => getIncidentTrends());
+  const [apiIncidentsSummary, setApiIncidentsSummary] = useState<any>(null);
+  const [apiVulnerabilities, setApiVulnerabilities] = useState<VulnerabilityItem[]>(() => getVulnerabilities());
 
   // Fetch from real server API routes
   useEffect(() => {
     async function loadApiData() {
       try {
-        const [res24h, res7d, res30d, resSev, resVectors, resAssets] = await Promise.allSettled([
+        const [res24h, res7d, res30d, resSev, resVectors, resAssets, resSources, resIncidents, resVulns] = await Promise.allSettled([
           cybersecurityApi.getThreatTrends('24h'),
           cybersecurityApi.getThreatTrends('7d'),
           cybersecurityApi.getThreatTrends('30d'),
           cybersecurityApi.getThreatSeverity(),
           cybersecurityApi.getTopVectors({ limit: 10 }),
           cybersecurityApi.getTopAffectedAssets(10),
+          cybersecurityApi.getAttackSources(),
+          cybersecurityApi.getIncidents(),
+          cybersecurityApi.getVulnerabilities(),
         ]);
 
         if (res24h.status === 'fulfilled' && res24h.value.data) setTrend24h(res24h.value.data);
@@ -70,6 +87,12 @@ export default function AnalyticsPage() {
         if (resSev.status === 'fulfilled' && resSev.value.data) setApiSeverityData(resSev.value.data);
         if (resVectors.status === 'fulfilled' && resVectors.value.data) setApiVectorsData(resVectors.value.data);
         if (resAssets.status === 'fulfilled' && resAssets.value.data) setApiAffectedAssets(resAssets.value.data);
+        if (resSources.status === 'fulfilled' && resSources.value.countries) setApiAttackSources(resSources.value.countries);
+        if (resIncidents.status === 'fulfilled' && resIncidents.value.timeline) {
+          setApiIncidentsTimeline(resIncidents.value.timeline);
+          setApiIncidentsSummary(resIncidents.value.summary);
+        }
+        if (resVulns.status === 'fulfilled' && resVulns.value.data) setApiVulnerabilities(resVulns.value.data);
       } catch (err) {
         console.error('Failed to fetch from telemetry APIs, using fallback store:', err);
       }
@@ -243,6 +266,36 @@ export default function AnalyticsPage() {
               toast.info(
                 `Target Asset: ${asset.name}`,
                 `${asset.type} · IP: ${asset.ip} · Risk Score: ${asset.riskScore}/100 · Events: ${asset.securityEvents.toLocaleString()}`
+              );
+            }}
+          />
+        </div>
+
+        {/* ── Task 6: Attack Sources Map & Task 7: Incident Status ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 20 }}>
+          <AttackSourcesMap
+            data={apiAttackSources}
+            onSelectCountry={country => {
+              toast.info(
+                `Origin: ${country.name} (${country.code})`,
+                `Inbound Intrusion Attempts: ${country.count.toLocaleString()} (${country.share}% global share)`
+              );
+            }}
+          />
+          <IncidentStatusChart
+            data={apiIncidentsTimeline}
+            summary={apiIncidentsSummary}
+          />
+        </div>
+
+        {/* ── Task 8: Vulnerability Severity & CVSS 3.1 Vector Inspector ── */}
+        <div>
+          <VulnerabilitySeverityInspector
+            data={apiVulnerabilities}
+            onSelectVulnerability={vuln => {
+              toast.info(
+                `Inspecting ${vuln.id}`,
+                `CVSS ${vuln.cvssScore.toFixed(1)} · ${vuln.affectedAsset} · ${vuln.title}`
               );
             }}
           />
