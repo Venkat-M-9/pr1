@@ -241,33 +241,25 @@ export default function HomePage() {
             title="TOTAL MONITORED ASSETS"
             value={records.length.toLocaleString()}
             subtitle="Central telemetry live"
-            icon={<ServerClusterIcon size={20} color="#2563eb" />}
-            iconBg="rgba(37, 99, 235, 0.1)"
-            iconColor="#2563eb"
+            icon={<ServerClusterIcon size={18} />}
           />
           <SummaryCard
             title="ACTIVE MONITORED ENDPOINTS"
             value={activeCount.toLocaleString()}
             subtitle="Operational infrastructure"
-            icon={<ShieldCheckIcon size={20} color="#10b981" />}
-            iconBg="rgba(16, 185, 129, 0.1)"
-            iconColor="#10b981"
+            icon={<ShieldCheckIcon size={18} />}
           />
           <SummaryCard
             title="HIGH &amp; CRITICAL RISKS"
             value={highPriorityCount.toLocaleString()}
             subtitle="Immediate patching priority"
-            icon={<ShieldAlertIcon size={20} color="#dc2626" />}
-            iconBg="rgba(220, 38, 38, 0.1)"
-            iconColor="#dc2626"
+            icon={<ShieldAlertIcon size={18} color="#ef4444" />}
           />
           <SummaryCard
             title="MEAN ASSET RISK SCORE"
             value={`${avgRiskScore} / 100`}
             subtitle="Composite exposure index"
-            icon={<ActivityPulseIcon size={20} color="#ea580c" />}
-            iconBg="rgba(234, 88, 12, 0.1)"
-            iconColor="#ea580c"
+            icon={<ActivityPulseIcon size={18} />}
           />
         </div>
 

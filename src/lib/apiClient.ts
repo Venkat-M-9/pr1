@@ -54,6 +54,23 @@ export interface AssetsResponse {
   data: SecurityAsset[];
 }
 
+export interface TopAffectedAssetsResponse {
+  success: boolean;
+  totalAssetsAnalyzed: number;
+  data: Array<{
+    id: string;
+    name: string;
+    type: string;
+    ip: string;
+    department: string;
+    securityEvents: number;
+    vulnerabilityCount: number;
+    criticalVulnerabilities: number;
+    riskScore: number;
+    status: string;
+  }>;
+}
+
 export interface IncidentsResponse {
   success: boolean;
   summary: {
@@ -131,6 +148,12 @@ export const cybersecurityApi = {
 
     const res = await fetch(`/api/assets?${searchParams.toString()}`);
     if (!res.ok) throw new Error(`Assets API error: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getTopAffectedAssets(limit = 10): Promise<TopAffectedAssetsResponse> {
+    const res = await fetch(`/api/assets/top-affected?limit=${limit}`);
+    if (!res.ok) throw new Error(`Top affected assets API error: ${res.statusText}`);
     return res.json();
   },
 

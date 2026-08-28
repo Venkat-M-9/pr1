@@ -256,25 +256,19 @@ export default function DataManagementPage() {
           title="CRITICAL RISK ASSETS"
           value={`${criticalCount} Crown Jewels`}
           subtitle="Assets with Risk Score >= 75 requiring patching"
-          icon={<ShieldAlertIcon size={20} color="#dc2626" />}
-          iconBg="rgba(220, 38, 38, 0.1)"
-          iconColor="#dc2626"
+          icon={<ShieldAlertIcon size={18} color="#ef4444" />}
         />
         <SummaryCard
           title="MONITORED ASSETS"
           value={activeFilteredRecords.length.toLocaleString()}
           subtitle="Active infrastructure endpoints under SIEM"
-          icon={<ServerClusterIcon size={20} color="#2563eb" />}
-          iconBg="rgba(37, 99, 235, 0.1)"
-          iconColor="#2563eb"
+          icon={<ServerClusterIcon size={18} />}
         />
         <SummaryCard
           title="MEAN ASSET RISK SCORE"
           value={`${Math.round(avgRiskScore)} / 100`}
           subtitle="Composite threat exposure index"
-          icon={<ActivityPulseIcon size={20} color="#ea580c" />}
-          iconBg="rgba(234, 88, 12, 0.1)"
-          iconColor="#ea580c"
+          icon={<ActivityPulseIcon size={18} />}
         />
       </div>
 

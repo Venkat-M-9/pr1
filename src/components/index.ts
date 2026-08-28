@@ -33,6 +33,7 @@ export { default as ChartCard } from './charts/ChartCard';
 export { default as ThreatTrendChart } from './charts/ThreatTrendChart';
 export { default as ThreatSeverityDonut } from './charts/ThreatSeverityDonut';
 export { default as TopThreatTypesChart } from './charts/TopThreatTypesChart';
+export { default as TopAffectedAssetsChart } from './charts/TopAffectedAssetsChart';
 
 /* Curated Vector CyberIcons */
 export * from './ui/CyberIcons';

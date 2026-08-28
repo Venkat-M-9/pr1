@@ -16,10 +16,10 @@ export default function TopFlaggedCard({ records, onSelectRecord }: Props) {
       .slice(0, 4);
   }, [records]);
 
-  const getScoreColor = (priority: string, score: number) => {
-    if (priority === 'critical' || score >= 75) return { bg: 'rgba(220, 53, 69, 0.12)', text: '#dc3545', border: 'rgba(220, 53, 69, 0.25)' };
-    if (priority === 'high' || score >= 50) return { bg: 'rgba(234, 88, 12, 0.12)', text: '#ea580c', border: 'rgba(234, 88, 12, 0.25)' };
-    return { bg: 'rgba(37, 99, 235, 0.12)', text: '#2563eb', border: 'rgba(37, 99, 235, 0.25)' };
+  const getScoreBadge = (score: number) => {
+    if (score >= 75) return { dot: '#ef4444', text: '#ef4444' };
+    if (score >= 50) return { dot: '#f97316', text: '#f97316' };
+    return { dot: '#3b82f6', text: '#3b82f6' };
   };
 
   return (
@@ -41,10 +41,10 @@ export default function TopFlaggedCard({ records, onSelectRecord }: Props) {
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {topRecords.map((item) => {
           const score = item.value;
-          const color = getScoreColor(item.priority, score);
+          const badge = getScoreBadge(score);
           return (
             <div
               key={item.id}
@@ -52,31 +52,34 @@ export default function TopFlaggedCard({ records, onSelectRecord }: Props) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 14,
-                padding: '10px 12px',
+                gap: 12,
+                padding: '10px 14px',
                 borderRadius: 'var(--radius)',
                 border: '1px solid var(--border)',
-                background: 'var(--bg-subtle)',
+                background: 'var(--bg)',
                 cursor: 'pointer',
                 transition: 'all 150ms ease',
               }}
             >
               <div
                 style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: '50%',
-                  background: color.bg,
-                  color: color.text,
-                  border: `1px solid ${color.border}`,
+                  minWidth: 42,
+                  height: 32,
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 13,
+                  gap: 4,
+                  fontSize: 12,
                   fontWeight: 700,
+                  color: 'var(--text)',
                   flexShrink: 0,
+                  fontFamily: 'var(--font-mono, monospace)',
                 }}
               >
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: badge.dot }} />
                 {score}
               </div>
 
@@ -85,7 +88,7 @@ export default function TopFlaggedCard({ records, onSelectRecord }: Props) {
                   {item.id} · {item.name}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {item.owner} · <strong style={{ color: color.text }}>Risk: {item.value}/100</strong> ({item.priority.toUpperCase()})
+                  {item.owner} · <span style={{ color: badge.text, fontWeight: 600 }}>{item.priority.toUpperCase()}</span> (Risk: {item.value}/100)
                 </div>
               </div>
             </div>

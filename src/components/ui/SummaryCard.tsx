@@ -27,10 +27,7 @@ export default function SummaryCard({
         {icon && (
           <div
             className={styles.iconBadge}
-            style={{
-              color: iconColor || 'inherit',
-              background: iconBg || 'var(--bg)',
-            }}
+            style={iconColor ? { color: iconColor } : undefined}
           >
             {icon}
           </div>
