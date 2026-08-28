@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import PageShell from '@/components/layout/PageShell';
 import SummaryCard from '@/components/ui/SummaryCard';
-import ChartCard from '@/components/charts/ChartCard';
+import AlertsLast7DaysChart from '@/components/charts/AlertsLast7DaysChart';
 import TopFlaggedCard from '@/components/ui/TopFlaggedCard';
 import ResourceTable from '@/components/table/ResourceTable';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -38,37 +38,6 @@ export default function HomePage() {
   const activeCount = useMemo(() => records.filter(r => r.status === 'active').length, [records]);
   const highPriorityCount = useMemo(() => records.filter(r => r.priority === 'critical' || r.priority === 'high').length, [records]);
   const avgRiskScore = useMemo(() => Math.round(records.reduce((acc, r) => acc + r.value, 0) / (records.length || 1)), [records]);
-
-  // 100% Dynamic Priority Breakdown by Risk Score Tier for the Stacked Bar Chart
-  const riskTierPriorityData = useMemo(() => {
-    const tiers: Record<string, { tier: string; Low: number; Medium: number; High: number; Critical: number }> = {
-      low: { tier: 'Low (< 25)', Low: 0, Medium: 0, High: 0, Critical: 0 },
-      medium: { tier: 'Medium (25-49)', Low: 0, Medium: 0, High: 0, Critical: 0 },
-      high: { tier: 'High (50-74)', Low: 0, Medium: 0, High: 0, Critical: 0 },
-      critical: { tier: 'Critical (75+)', Low: 0, Medium: 0, High: 0, Critical: 0 },
-    };
-
-    records.forEach(r => {
-      let tierKey = 'low';
-      if (r.value >= 75) tierKey = 'critical';
-      else if (r.value >= 50) tierKey = 'high';
-      else if (r.value >= 25) tierKey = 'medium';
-
-      if (r.priority === 'low') tiers[tierKey].Low++;
-      else if (r.priority === 'medium') tiers[tierKey].Medium++;
-      else if (r.priority === 'high') tiers[tierKey].High++;
-      else if (r.priority === 'critical') tiers[tierKey].Critical++;
-    });
-
-    return Object.values(tiers);
-  }, [records]);
-
-  const stackedKeys = [
-    { key: 'Low', color: '#2563eb', label: 'Low (< 25)' },
-    { key: 'Medium', color: '#eab308', label: 'Medium (25-49)' },
-    { key: 'High', color: '#ea580c', label: 'High (50-74)' },
-    { key: 'Critical', color: '#dc3545', label: 'Critical (75+)' },
-  ];
 
   const toggleSelectRow = (id: string) => {
     setSelectedIds(prev => {
@@ -270,15 +239,7 @@ export default function HomePage() {
           defaultOpen={true}
         >
           <div className={styles.grid2}>
-            <ChartCard
-              title="Threat Severity by Risk Tier"
-              subtitle="Dynamic distribution across risk tiers (Low <25 to Critical 75+)"
-              data={riskTierPriorityData}
-              dataKey="High"
-              categoryKey="tier"
-              type="bar"
-              stackedKeys={stackedKeys}
-            />
+            <AlertsLast7DaysChart />
             <TopFlaggedCard
               records={records}
             />
