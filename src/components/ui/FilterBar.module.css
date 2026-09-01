@@ -14,8 +14,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  flex: 1;
-  min-width: 220px;
+  width: 260px;
 }
 
 .searchIcon {
