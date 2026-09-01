@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Record as SystemRecord } from '@/lib/mockData';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { Star, Edit3, Trash2 } from 'lucide-react';
+import { Star, Edit3, Trash2, Copy } from 'lucide-react';
 
 interface Props {
   record: SystemRecord;
@@ -239,9 +239,39 @@ export default function RecordDetailView({ record, onToggleStar, onEdit, onDelet
       )}
 
       {activeTab === 'raw' && (
-        <pre style={{ padding: 12, background: 'var(--bg-subtle)', borderRadius: 'var(--radius)', fontSize: 11, overflowX: 'auto', color: 'var(--text)' }}>
-          {JSON.stringify(record, null, 2)}
-        </pre>
+        <div style={{ position: 'relative' }}>
+          <button
+            type="button"
+            onClick={(e) => {
+              navigator.clipboard.writeText(JSON.stringify(record, null, 2));
+              const btn = e.currentTarget;
+              const originalColor = btn.style.color;
+              btn.style.color = 'var(--accent)';
+              setTimeout(() => { btn.style.color = originalColor; }, 1000);
+            }}
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-sm)',
+              padding: 4,
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'color var(--transition)'
+            }}
+            title="Copy Raw Telemetry"
+          >
+            <Copy size={14} />
+          </button>
+          <pre style={{ padding: 12, paddingTop: 32, background: 'var(--bg-subtle)', borderRadius: 'var(--radius)', fontSize: 11, overflowX: 'auto', color: 'var(--text)' }}>
+            {JSON.stringify(record, null, 2)}
+          </pre>
+        </div>
       )}
     </div>
   );

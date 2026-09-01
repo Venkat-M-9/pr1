@@ -57,48 +57,43 @@ export default function TopBar({ title, onMobileMenuToggle }: Props) {
   const initials = getInitials(displayName);
 
   return (
-    <header className={styles.topbar}>
-      <div className={styles.left}>
-        {onMobileMenuToggle && (
-          <button
-            className={styles.mobileMenuBtn}
-            onClick={onMobileMenuToggle}
-            aria-label="Toggle mobile menu"
-          >
-            <Menu size={18} />
-          </button>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      {/* Mobile Menu Toggle (only shows on mobile via CSS usually, but we can do it inline or keep class) */}
+      <button
+        className={styles.mobileMenuBtn}
+        onClick={() => window.dispatchEvent(new CustomEvent('toggleMobileMenu'))}
+        aria-label="Toggle mobile menu"
+      >
+        <Menu size={18} />
+      </button>
+
+      <NotificationPopover />
+
+      <button
+        className={styles.iconBtn}
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        aria-label="Toggle theme"
+      >
+        {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
+
+      <div className={styles.userBadge}>
+        {user?.user_metadata?.avatar_url ? (
+          <img src={user.user_metadata.avatar_url} alt="Avatar" className={styles.avatarImage} style={{ width: 26, height: 26, borderRadius: '50%' }} />
+        ) : (
+          <div className={styles.avatar}>{initials}</div>
         )}
+        <span className={styles.userName}>{displayName}</span>
       </div>
 
-      <div className={styles.right}>
-        <NotificationPopover />
-
-        <button
-          className={styles.iconBtn}
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-
-        <div className={styles.userBadge}>
-          {user?.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="Avatar" className={styles.avatarImage} style={{ width: 26, height: 26, borderRadius: '50%' }} />
-          ) : (
-            <div className={styles.avatar}>{initials}</div>
-          )}
-          <span className={styles.userName}>{displayName}</span>
-        </div>
-
-        <button
-          className={styles.iconBtn}
-          onClick={handleSignOut}
-          aria-label="Sign out"
-          title="Sign Out"
-        >
-          <LogOut size={16} />
-        </button>
-      </div>
-    </header>
+      <button
+        className={styles.iconBtn}
+        onClick={handleSignOut}
+        aria-label="Sign out"
+        title="Sign Out"
+      >
+        <LogOut size={16} />
+      </button>
+    </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import styles from './PageShell.module.css';
+import TopBar from './TopBar';
 
 interface Props {
   title: string;
@@ -15,7 +16,7 @@ export default function PageShell({ title, description, actions, breadcrumbs, ch
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <div className={styles.titleRow}>
+        <div className={styles.topRow}>
           <div className={styles.titleMain}>
             {breadcrumbs && (
               <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
@@ -32,7 +33,11 @@ export default function PageShell({ title, description, actions, breadcrumbs, ch
               {description && <span className={styles.description}>{description}</span>}
             </div>
           </div>
-          {actions && <div className={styles.actions}>{actions}</div>}
+          
+          <div className={styles.globalControls}>
+            {actions && <div className={styles.actions} style={{ marginRight: 16 }}>{actions}</div>}
+            <TopBar />
+          </div>
         </div>
       </header>
 

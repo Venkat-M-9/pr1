@@ -361,7 +361,7 @@ export default function DataManagementPage() {
         searchFields={['name', 'id', 'owner', 'description']}
         searchPlaceholder="Search by ID, Title, Owner..."
         filterGroups={filterGroups}
-        virtualize={true}
+        virtualize={false}
         resourceName="Record"
         onAddClick={() => setIsCreateOpen(true)}
         addLabel="New Record"
