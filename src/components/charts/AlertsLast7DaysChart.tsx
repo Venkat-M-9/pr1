@@ -38,7 +38,7 @@ export default function AlertsLast7DaysChart({ data }: Props) {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Alerts, last 7 days</h3>
+        <h3 className={styles.title}>Analytical Threat Visualizations</h3>
       </div>
 
       <div className={styles.chartContainer}>

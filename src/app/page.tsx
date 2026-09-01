@@ -233,18 +233,12 @@ export default function HomePage() {
         </div>
 
         {/* 100% Dynamic Analytics Visualizations */}
-        <CollapsibleSection
-          title="Analytical Threat Visualizations"
-          subtitle="Severity distribution across risk scoring tiers and high-exposure infrastructure"
-          defaultOpen={true}
-        >
-          <div className={styles.grid2}>
-            <AlertsLast7DaysChart />
-            <TopFlaggedCard
-              records={records}
-            />
-          </div>
-        </CollapsibleSection>
+        <div className={styles.grid2}>
+          <AlertsLast7DaysChart />
+          <TopFlaggedCard
+            records={records}
+          />
+        </div>
 
         {/* Stream Table */}
         <div className={styles.section}>
