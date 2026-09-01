@@ -23,6 +23,7 @@ interface Props {
   onFilterChange?: (filterId: string, value: string) => void;
   onResetFilters?: () => void;
   actions?: React.ReactNode;
+  variant?: 'default' | 'embedded';
 }
 
 import { useState, useRef, useEffect } from 'react';
@@ -97,11 +98,12 @@ export default function FilterBar({
   onFilterChange,
   onResetFilters,
   actions,
+  variant = 'default',
 }: Props) {
   const activeCount = Object.values(selectedFilters).filter(Boolean).length;
 
   return (
-    <div className={styles.bar}>
+    <div className={`${styles.bar} ${variant === 'embedded' ? styles.embedded : ''}`}>
       <div className={styles.searchGroup}>
         <Search size={16} className={styles.searchIcon} />
         <input

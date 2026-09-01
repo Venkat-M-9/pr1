@@ -137,9 +137,15 @@ export default function ResourceTable<TData extends Record<string, any>>({
   };
 
   return (
-    <div>
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-lg)',
+      overflow: 'hidden',
+    }}>
       {/* Standardized Filter & Action Bar */}
       <FilterBar
+        variant="embedded"
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder={searchPlaceholder}
@@ -180,7 +186,7 @@ export default function ResourceTable<TData extends Record<string, any>>({
                   alignItems: 'center',
                   gap: 6,
                   padding: '6px 12px',
-                  background: 'var(--surface)',
+                  background: 'var(--bg)',
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius)',
                   fontSize: 13,
@@ -202,7 +208,7 @@ export default function ResourceTable<TData extends Record<string, any>>({
                   alignItems: 'center',
                   gap: 6,
                   padding: '6px 12px',
-                  background: 'var(--surface)',
+                  background: 'var(--bg)',
                   color: 'var(--text)',
                   border: '1px solid var(--border)',
                   borderRadius: 'var(--radius)',
